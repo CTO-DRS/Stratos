@@ -16,7 +16,7 @@ import java.io.File
 
 /**
  * Manages the bundled `cloudflared` binary:
- *  - Quick Tunnel: temporary https://*.trycloudflare.com URL, no account.
+ *  - Quick Tunnel: temporary trycloudflare.com URL, no account.
  *  - Named Tunnel: persistent hostname from a token (encrypted at rest in the
  *    Keystore vault, passed to the process via environment only — never argv,
  *    never logs, never UI echo).
