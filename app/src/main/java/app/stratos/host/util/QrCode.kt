@@ -16,7 +16,7 @@ object QrCode {
             EncodeHintType.MARGIN to 1
         )
         val matrix = QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, size, size, hints)
-        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.RGB_8888)
+        val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         for (x in 0 until size) {
             for (y in 0 until size) {
                 bmp.setPixel(x, y, if (matrix[x, y]) Color.BLACK else Color.WHITE)

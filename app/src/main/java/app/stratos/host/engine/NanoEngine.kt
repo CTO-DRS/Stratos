@@ -2,6 +2,7 @@ package app.stratos.host.engine
 
 import app.stratos.host.security.ZipSecurity
 import fi.iki.elonen.NanoHTTPD
+import fi.iki.elonen.NanoHTTPD.Response.Status
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -36,10 +37,10 @@ class NanoEngine : EngineApi {
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 runCatching {
-                    server?.stop(0, true)
+                    server?.stop()
                     val host = bindHost.ifBlank { "0.0.0.0" }
                     val s = Inner(host, port, sites.filter { it.enabled }, metrics)
-                    s.start(SOCKET_READ_TIMEOUT, true)
+                    s.start(5000, true)
                     server = s
                     this@NanoEngine.sites = sites.filter { it.enabled }
                     "$host:$port"
@@ -49,7 +50,7 @@ class NanoEngine : EngineApi {
 
     override suspend fun stop() = withContext(Dispatchers.IO) {
         mutex.withLock {
-            server?.stop(0, true)
+            server?.stop()
             server = null
             metrics.markStopped()
         }
@@ -91,10 +92,11 @@ class NanoEngine : EngineApi {
 
     override suspend fun extractZip(zipPath: String, destDir: String): Result<ZipSummary> =
         withContext(Dispatchers.IO) {
-            ZipSecurity.validateAndExtract(File(zipPath), File(destDir)).map {
+            runCatching {
+                val r = ZipSecurity.validateAndExtract(File(zipPath), File(destDir))
                 ZipSummary(
-                    files = it.files, dirs = it.dirs, bytes = it.bytes,
-                    root = it.root, hasIndex = it.hasIndex, entryCount = it.entryCount
+                    files = r.files, dirs = r.dirs, bytes = r.bytes,
+                    root = r.root, hasIndex = r.hasIndex, entryCount = r.entryCount
                 )
             }
         }
@@ -325,7 +327,8 @@ internal class NanoMetrics {
     private fun percentile(q: Double): Double = synchronized(latLock) {
         if (latencies.isEmpty()) 0.0
         else {
-            val sorted = latencies.toSortedTypedArray()
+            val sorted = latencies.toMutableList()
+            sorted.sort()
             sorted[((sorted.size - 1) * q).toInt().coerceIn(0, sorted.size - 1)].toDouble()
         }
     }
@@ -339,9 +342,6 @@ internal class NanoMetrics {
         startedAt = System.currentTimeMillis()
     }
 }
-
-private fun <T : Comparable<T>> ArrayDeque<T>.toSortedTypedArray(): Array<T> =
-    this.toTypedArray().also { it.sort() }
 
 /** Streams a byte range of a file without loading it into memory. */
 internal class RandomAccessInputStream(private val file: File, private val offset: Long) :

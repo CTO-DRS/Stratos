@@ -100,7 +100,7 @@ object SyntaxSupport {
             IThemeSource.fromInputStream(stream, path, null),
             name
         ).apply { setDark(isDark) }
-        ThemeRegistry.getInstance().loadTheme(model, isCurrentTheme = false)
+        ThemeRegistry.getInstance().loadTheme(model, false)
     }
 
     /** Point ThemeRegistry at the light or dark Stratos theme (no-op if current). */

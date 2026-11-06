@@ -30,7 +30,7 @@ class GoEngine private constructor(
             instance.javaClass.getMethod("VersionString").invoke(instance) as? String
         }.getOrNull() ?: "go"
 
-    private fun bus(request: String): String =
+    private suspend fun bus(request: String): String =
         suspendCancellableCoroutine { cont ->
             singleThread.execute {
                 try {

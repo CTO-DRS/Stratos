@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -94,7 +95,7 @@ class HostingController(
 
     /** Live metrics stream sampled once per second while the collector lives. */
     fun metricsFlow(periodMs: Long = 1000) = kotlinx.coroutines.flow.flow {
-        while (isActive) {
+        while (currentCoroutineContext().isActive) {
             _status.value = engine.status()
             emit(_status.value)
             delay(periodMs)

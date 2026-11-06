@@ -57,6 +57,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import app.stratos.host.R
 import app.stratos.host.StratosApp
@@ -350,7 +351,7 @@ private fun CodeEditorView(
     val textMateReady = remember { SyntaxSupport.init(context) }
     val editor = remember {
         CodeEditor(context).apply {
-            lineNumberEnabled = true
+            setLineNumberEnabled(true)
             isWordwrap = false
             typefaceText = android.graphics.Typeface.MONOSPACE
             setTextSize(13f)
