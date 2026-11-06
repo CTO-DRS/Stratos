@@ -26,6 +26,13 @@ All notable changes to Stratos are documented here. Format: Keep a Changelog 1.1
 - **Unified build pipeline** (`.github/workflows/build.yml`, replacing the earlier two-file pair): Go + JVM gates → debug APK artifact on every push/PR; `v*` tags → signed-or-documented-fallback APK on the GitHub Release with SHA-256 checksums.
 
 ### Changed
+- **Custom Arabic typography** (bundled Cairo font, SIL OFL 1.1 — notices updated): a geometric, Arabic-first family that covers Arabic, Latin and Turkish in one brand voice, weight-mapped (400/500/600/700) into every Material 3 text style. The shared type scale is tracking-free because nonzero letter-spacing breaks Arabic glyph joining; wide tracking is reserved for the Latin-only STRATOS wordmark (which now settles from wide to final during the splash boot moment). Line heights raised for Arabic dots/hamza breathing room. Third-party notices gained the full OFL section.
+- **Extra tour animations** (version number unchanged):
+  - Choreographed entrances: welcome texts, tour-page content and permission cards arrive as staggered sequences (lift + fade on one shared progress; tour pages replay their choreography every time they re-enter the viewport).
+  - Swipe parallax in the tour: hero, title and bullets travel at different depths while the layer fades near the page edge — pager offsets are read inside `graphicsLayer` lambdas, so swiping costs no recomposition.
+  - Living hero stages: rotating energy ring, breathing halo and three ion particles on elliptical comet-tail orbits behind the splash logo, welcome logo and tour icons (draw-phase only).
+  - Tour dots upgraded: springy width change, animated color, breathing plasma glow behind the active dot; the "step n of m" counter now rolls vertically (RTL-safe).
+  - Micro-interactions: GlowButton press squash (springy 0.965×), permission status pill morphs color and pulses once on grant, welcome CTA arrow nudges along the layout direction (RTL-aware), step transitions fade + scale (identical in RTL/LTR).
 - **Stratos 2035 interface** (version number unchanged):
   - Glassmorphic surfaces (translucent fill + gradient hairline + polished top highlight) over a living aurora backdrop (three drifting plasma blobs, draw-phase-only animation — no recomposition cost).
   - Floating glass dock replaces the bottom navigation bar: translucent, under-glow energy line, animated gradient pill for the selected destination.

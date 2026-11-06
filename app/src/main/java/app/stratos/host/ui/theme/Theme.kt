@@ -4,7 +4,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Shapes
-import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -12,10 +11,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 
 // ---- Stratos 2035 palette --------------------------------------------------
 // Deep-space glass + aurora. Surfaces are translucent by design; the aurora
@@ -144,20 +140,8 @@ private val StratosShapes = Shapes(
     extraLarge = RoundedCornerShape(28.dp)
 )
 
-private val StratosTypography = Typography(
-    headlineLarge = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
-    headlineMedium = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp),
-    headlineSmall = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
-    titleLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.1).sp),
-    titleMedium = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
-    titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-    bodyLarge = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp),
-    bodyMedium = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Normal, lineHeight = 21.sp),
-    bodySmall = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight.Normal, lineHeight = 18.sp),
-    labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-    labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.2.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.4.sp)
-)
+// Typography (StratosFontFamily = bundled Cairo, Arabic-safe zero tracking)
+// lives in Type.kt — same package, wired into StratosTheme below.
 
 /** Tracks the active Stratos darkness for glass/aurora helpers. */
 val LocalStratosDark = staticCompositionLocalOf { false }

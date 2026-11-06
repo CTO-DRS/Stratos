@@ -147,6 +147,17 @@ Generated HTML is written to `sites/<id>/index.html` and registered through
 mirrors automatically for RTL; monospace/numeric strings use
 `Formatters` (locale-stable) to avoid Arabic-Indic digit surprises in URLs.
 
+**Typography.** `ui/theme/Type.kt` bundles the Cairo font (SIL OFL 1.1;
+Arabic + Latin + Turkish coverage in one family, static 400/500/600/700
+instances generated from the upstream variable font) and maps it onto every
+Material 3 text style, so all three UI languages share one brand voice. The
+shared scale is intentionally tracking-free: Arabic is a cursive script and
+any nonzero letter-spacing is inserted between shaped clusters, visibly
+breaking glyph joins. Wide tracking exists only on Latin-only brand strings
+(the STRATOS wordmark), applied at the call site. Ambient onboarding motion
+(rings, orbits, breathing) reads animation state inside draw-phase lambdas
+(`drawBehind` / `graphicsLayer`) so looping animations never recompose.
+
 ## 9. Building the Go engine AAR
 
 ```bash

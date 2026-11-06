@@ -3,6 +3,18 @@
 Stratos is MIT-licensed (see `LICENSE`). It bundles or depends on the
 following third-party work; each retains its own license.
 
+## Bundled font (app/src/main/res/font/)
+
+- **Cairo** — Arabic-first geometric sans-serif by Mohamed Gaber, extended by
+  the Google Fonts team; covers Arabic, Latin and Turkish in one family.
+  Static instances (400/500/600/700) generated from the upstream variable
+  font. Licensed under the SIL Open Font License 1.1 with the Reserved Font
+  Name "Cairo" — the full license text ships with the repository as
+  `docs/licenses/Cairo-OFL.txt` and is also available at
+  <https://github.com/google/fonts/blob/main/ofl/cairo/OFL.txt>.
+  OFL fonts are not covered by the project's MIT license; they are bundled
+  unmodified under their own terms.
+
 ## Bundled TextMate grammars (assets/textmate/)
 
 - **HTML, CSS, JavaScript, JSON, Markdown, XML** grammars and language

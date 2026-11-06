@@ -3,12 +3,16 @@ package app.stratos.host.ui.theme
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.RowScope
@@ -151,6 +155,14 @@ fun GlowButton(
         ),
         label = "haloAlpha"
     )
+    // Press micro-interaction: a quick springy squash, like a real key.
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val pressScale by animateFloatAsState(
+        targetValue = if (pressed) 0.965f else 1f,
+        animationSpec = spring(dampingRatio = 0.55f, stiffness = 900f),
+        label = "pressScale"
+    )
 
     Box(
         modifier = modifier,
@@ -178,7 +190,11 @@ fun GlowButton(
         }
         Row(
             modifier = Modifier
-                .graphicsLayer { alpha = if (enabled) 1f else 0.42f }
+                .graphicsLayer {
+                    alpha = if (enabled) 1f else 0.42f
+                    scaleX = pressScale
+                    scaleY = pressScale
+                }
                 .clip(shape)
                 .background(stratosGlowBrush())
                 .border(
@@ -191,7 +207,12 @@ fun GlowButton(
                     ),
                     shape
                 )
-                .clickable(enabled = enabled, onClick = onClick)
+                .clickable(
+                    enabled = enabled,
+                    interactionSource = interaction,
+                    indication = null,
+                    onClick = onClick
+                )
                 .padding(horizontal = 22.dp, vertical = 14.dp),
             horizontalArrangement = androidx.compose.foundation.layout.Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically,

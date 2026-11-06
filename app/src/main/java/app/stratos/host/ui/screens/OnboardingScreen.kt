@@ -9,16 +9,23 @@ import android.provider.Settings as AndroidSettings
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.EaseOutBack
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,6 +43,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -67,17 +75,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
@@ -88,6 +99,7 @@ import app.stratos.host.ui.theme.AuroraBackdrop
 import app.stratos.host.ui.theme.GlowButton
 import app.stratos.host.ui.theme.LogoTile
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.StratosFontFamily
 import app.stratos.host.ui.theme.glassEdgeBrush
 import app.stratos.host.ui.theme.glassFill
 import app.stratos.host.ui.theme.stratosGlowBrush
@@ -97,11 +109,24 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import android.Manifest
 import android.content.pm.PackageManager
+import kotlin.math.PI
+import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 // ---------------------------------------------------------------------------
 // Launch experience: splash → welcome → app tour → permissions → main app.
 // Every surface is trilingual (AR/EN/TR) and RTL-safe; the aurora + glass
 // language is the same as the rest of the 2035 interface.
+//
+// Animation rules (the "extra motion" layer):
+//  · Ambient loops (rings, orbits, breathing) read state inside drawBehind /
+//    graphicsLayer lambdas only → draw-phase motion, zero recomposition.
+//  · Entrances are choreographed (staggered windows on one shared progress),
+//    so a page arrives as a sequence, not a single fade.
+//  · Direction-sensitive motion is avoided; vertical slides, scale and fade
+//    are identical in RTL and LTR, and pager parallax lives in page-local
+//    coordinates (mirrored automatically with the layout direction).
 // ---------------------------------------------------------------------------
 
 /** Reactive launch gate used by MainActivity (see [SplashScreen] / [OnboardingScreen]). */
@@ -125,6 +150,127 @@ fun StratosLaunchGate(
     }
 }
 
+// ---- Shared choreography helpers --------------------------------------------
+
+/** Maps a shared progress [p] into the [start,end] window, clamped to 0..1. */
+private fun window(p: Float, start: Float, end: Float): Float =
+    ((p - start) / (end - start)).coerceIn(0f, 1f)
+
+/**
+ * One-shot entrance: fades and lifts its content after a per-index delay.
+ * Used to choreograph a stack of elements (welcome text, permission cards).
+ */
+@Composable
+private fun StaggerIn(index: Int, modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+    val p = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        delay(140L + index * 95L)
+        p.animateTo(1f, tween(560, easing = FastOutSlowInEasing))
+    }
+    Box(
+        modifier.graphicsLayer {
+            alpha = p.value
+            translationY = (1f - p.value) * 34f
+        }
+    ) { content() }
+}
+
+/**
+ * The living aura stage: rotating sweep ring (optional), breathing radial
+ * halo, and three ion particles orbiting on an ellipse with comet tails.
+ * All motion reads animation state inside drawBehind / graphicsLayer lambdas
+ * — draw-phase only, no recomposition per frame.
+ */
+@Composable
+private fun AuraStage(
+    sizeDp: Int,
+    ring: Boolean,
+    haloColor: Color,
+    haloAlpha: Float,
+    breatheContent: Boolean = false,
+    content: @Composable () -> Unit
+) {
+    val t = rememberInfiniteTransition(label = "aura")
+    val rot by t.animateFloat(
+        initialValue = 0f, targetValue = 360f,
+        animationSpec = infiniteRepeatable(tween(5200, easing = LinearEasing)),
+        label = "rot"
+    )
+    val orbit by t.animateFloat(
+        initialValue = 0f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing)),
+        label = "orbit"
+    )
+    val breathe by t.animateFloat(
+        initialValue = 0.4f, targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(2600, easing = LinearEasing), RepeatMode.Reverse),
+        label = "breathe"
+    )
+
+    Box(Modifier.size(sizeDp.dp), contentAlignment = Alignment.Center) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .drawBehind {
+                    val r = size.minDimension / 2f
+                    if (ring) {
+                        rotate(rot) {
+                            drawCircle(
+                                brush = Brush.sweepGradient(
+                                    0f to Color.Transparent,
+                                    0.30f to StratosColors.GlowA.copy(alpha = 0.9f),
+                                    0.55f to StratosColors.GlowB.copy(alpha = 0.75f),
+                                    0.80f to StratosColors.GlowC.copy(alpha = 0.9f),
+                                    1f to Color.Transparent
+                                ),
+                                style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+                            )
+                        }
+                    }
+                    // Breathing halo under everything.
+                    drawCircle(
+                        brush = Brush.radialGradient(
+                            colors = listOf(
+                                haloColor.copy(alpha = haloAlpha * breathe),
+                                haloColor.copy(alpha = haloAlpha * 0.45f * breathe),
+                                Color.Transparent
+                            ),
+                            radius = r
+                        )
+                    )
+                    // Three orbiting ions with comet tails (elliptical orbit).
+                    val orbR = r * 0.94f
+                    val ions = listOf(StratosColors.GlowA, StratosColors.GlowB, StratosColors.GlowC)
+                    repeat(3) { i ->
+                        val a0 = (orbit + i / 3f) * 2f * PI.toFloat()
+                        repeat(4) { tail ->
+                            val a = a0 - tail * 0.055f
+                            drawCircle(
+                                color = ions[i].copy(alpha = (0.95f - tail * 0.26f).coerceIn(0f, 1f)),
+                                radius = ((3.1f - tail * 0.7f).coerceAtLeast(0.6f)).dp.toPx(),
+                                center = Offset(
+                                    center.x + cos(a) * orbR,
+                                    center.y + sin(a) * orbR * 0.34f
+                                )
+                            )
+                        }
+                    }
+                }
+        )
+        Box(
+            Modifier.graphicsLayer {
+                if (breatheContent) {
+                    val s = 0.968f + 0.032f * breathe
+                    scaleX = s
+                    scaleY = s
+                    translationY = (breathe - 0.7f) * 2f * 4.dp.toPx()
+                }
+            },
+            contentAlignment = Alignment.Center
+        ) { content() }
+    }
+}
+
 // ---- 1 · Splash (شاشة البداية) ----------------------------------------------
 
 @Composable
@@ -132,6 +278,13 @@ fun SplashScreen() {
     val appear = remember { Animatable(0f) }
     LaunchedEffect(Unit) {
         appear.animateTo(1f, tween(950, easing = FastOutSlowInEasing))
+    }
+    // Wordmark tracking settles from wide to final — a small "boot" moment.
+    // Latin-only string, so letter-spacing is script-safe here.
+    val tracking = remember { Animatable(2.6f) }
+    LaunchedEffect(Unit) {
+        delay(140)
+        tracking.animateTo(1f, tween(950, easing = FastOutSlowInEasing))
     }
 
     Box(
@@ -149,52 +302,19 @@ fun SplashScreen() {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            // Orbital energy ring + logo mark.
-            Box(contentAlignment = Alignment.Center) {
-                val transition = rememberInfiniteTransition(label = "ring")
-                val rot by transition.animateFloat(
-                    initialValue = 0f,
-                    targetValue = 360f,
-                    animationSpec = infiniteRepeatable(tween(5200, easing = LinearEasing)),
-                    label = "ringRot"
-                )
-                Box(
-                    Modifier
-                        .size(148.dp)
-                        .graphicsLayer { alpha = appear.value }
-                        .drawBehind {
-                            rotate(rot) {
-                                drawCircle(
-                                    brush = Brush.sweepGradient(
-                                        0f to Color.Transparent,
-                                        0.30f to StratosColors.GlowA.copy(alpha = 0.9f),
-                                        0.55f to StratosColors.GlowB.copy(alpha = 0.75f),
-                                        0.80f to StratosColors.GlowC.copy(alpha = 0.9f),
-                                        1f to Color.Transparent
-                                    ),
-                                    style = Stroke(
-                                        width = 2.dp.toPx(),
-                                        cap = StrokeCap.Round
-                                    )
-                                )
-                            }
-                            // Soft ion halo under the ring.
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        StratosColors.GlowB.copy(alpha = 0.22f),
-                                        Color.Transparent
-                                    ),
-                                    radius = size.minDimension / 2f
-                                )
-                            )
-                        }
-                )
+            // Orbital energy ring + orbiting ions + logo mark.
+            AuraStage(
+                sizeDp = 148,
+                ring = true,
+                haloColor = StratosColors.GlowB,
+                haloAlpha = 0.24f
+            ) {
                 LogoTile(
                     modifier = Modifier.graphicsLayer {
                         alpha = appear.value
-                        scaleX = 0.7f + 0.3f * appear.value
-                        scaleY = 0.7f + 0.3f * appear.value
+                        val s = 0.7f + 0.3f * appear.value
+                        scaleX = s
+                        scaleY = s
                     },
                     sizeDp = 84
                 )
@@ -207,8 +327,8 @@ fun SplashScreen() {
                 color = MaterialTheme.colorScheme.onBackground,
                 fontSize = 30.sp,
                 fontWeight = FontWeight.Bold,
-                letterSpacing = 9.sp,
-                fontFamily = FontFamily.SansSerif,
+                letterSpacing = (9f * tracking.value).sp,
+                fontFamily = StratosFontFamily,
                 modifier = Modifier.graphicsLayer {
                     alpha = appear.value
                     translationY = (1f - appear.value) * 26f
@@ -247,7 +367,12 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
     AnimatedContent(
         targetState = step,
-        transitionSpec = { fadeIn(tween(360)) togetherWith fadeOut(tween(240)) },
+        transitionSpec = {
+            // Scale + fade: identical in RTL and LTR (no directional slide).
+            (fadeIn(tween(380, easing = FastOutSlowInEasing)) +
+                scaleIn(initialScale = 0.955f, animationSpec = tween(380, easing = FastOutSlowInEasing)))
+                .togetherWith(fadeOut(tween(240)))
+        },
         label = "launchStep"
     ) { s ->
         when (s) {
@@ -262,6 +387,16 @@ fun OnboardingScreen(onFinish: () -> Unit) {
 
 @Composable
 private fun WelcomeScreen(onStart: () -> Unit) {
+    // RTL-aware forward nudge for the CTA arrow: the auto-mirrored icon points
+    // "forward" in both directions, so the nudge follows the layout direction.
+    val forward = if (LocalLayoutDirection.current == LayoutDirection.Ltr) 1f else -1f
+    val nudge = rememberInfiniteTransition(label = "nudge").animateFloat(
+        initialValue = -1f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(850, easing = LinearEasing), RepeatMode.Reverse),
+        label = "nudgeX"
+    )
+
     Box(
         Modifier
             .fillMaxSize()
@@ -278,72 +413,68 @@ private fun WelcomeScreen(onStart: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Box(contentAlignment = Alignment.Center) {
-                val transition = rememberInfiniteTransition(label = "welcomeHalo")
-                val breathe by transition.animateFloat(
-                    initialValue = 0.55f,
-                    targetValue = 1f,
-                    animationSpec = infiniteRepeatable(tween(2600, easing = LinearEasing), RepeatMode.Reverse),
-                    label = "halo"
-                )
-                Box(
-                    Modifier
-                        .size(168.dp)
-                        .drawBehind {
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    colors = listOf(
-                                        StratosColors.GlowA.copy(alpha = 0.30f * breathe),
-                                        StratosColors.GlowB.copy(alpha = 0.14f * breathe),
-                                        Color.Transparent
-                                    ),
-                                    radius = size.minDimension / 2f
-                                )
-                            )
-                        }
-                )
-                LogoTile(sizeDp = 96)
+            StaggerIn(index = 0) {
+                AuraStage(
+                    sizeDp = 168,
+                    ring = false,
+                    haloColor = StratosColors.GlowA,
+                    haloAlpha = 0.30f,
+                    breatheContent = true
+                ) {
+                    LogoTile(sizeDp = 96)
+                }
             }
 
             Spacer(Modifier.height(28.dp))
 
             // A hello in all three UI languages — the app's signature.
-            Text(
-                stringResource(R.string.welcome_greeting),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.labelLarge,
-                letterSpacing = 1.sp
-            )
-            Spacer(Modifier.height(10.dp))
-            Text(
-                stringResource(R.string.welcome_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.headlineLarge,
-                textAlign = TextAlign.Center
-            )
-            Spacer(Modifier.height(12.dp))
-            Text(
-                stringResource(R.string.welcome_body),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-
-            Spacer(Modifier.height(40.dp))
-            GlowButton(onClick = onStart) {
+            // (Mixed-script string: no letter-spacing, it would break the
+            // Arabic joins; Cairo keeps the greeting in one brand voice.)
+            StaggerIn(index = 1) {
                 Text(
-                    stringResource(R.string.cta_get_started),
-                    color = Color.White,
+                    stringResource(R.string.welcome_greeting),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                     style = MaterialTheme.typography.labelLarge
                 )
-                Spacer(Modifier.width(8.dp))
-                Icon(
-                    Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(18.dp)
+            }
+            Spacer(Modifier.height(10.dp))
+            StaggerIn(index = 2) {
+                Text(
+                    stringResource(R.string.welcome_title),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.headlineLarge,
+                    textAlign = TextAlign.Center
                 )
+            }
+            Spacer(Modifier.height(12.dp))
+            StaggerIn(index = 3) {
+                Text(
+                    stringResource(R.string.welcome_body),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+
+            Spacer(Modifier.height(40.dp))
+            StaggerIn(index = 4) {
+                GlowButton(onClick = onStart) {
+                    Text(
+                        stringResource(R.string.cta_get_started),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier
+                            .size(18.dp)
+                            .graphicsLayer { translationX = nudge.value * 3.dp.toPx() * forward }
+                    )
+                }
             }
         }
     }
@@ -391,7 +522,8 @@ private fun TourPager(onDone: () -> Unit) {
                 .statusBarsPadding()
                 .navigationBarsPadding()
         ) {
-            // Step counter + skip.
+            // Step counter + skip. The counter rolls vertically on page change
+            // (vertical slide is RTL-safe by construction).
             Row(
                 Modifier
                     .fillMaxWidth()
@@ -399,11 +531,21 @@ private fun TourPager(onDone: () -> Unit) {
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    stringResource(R.string.domain_step_of, pager.currentPage + 1, tourPages.size),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelLarge
-                )
+                AnimatedContent(
+                    targetState = pager.currentPage + 1,
+                    transitionSpec = {
+                        (slideInVertically(tween(320, easing = FastOutSlowInEasing)) { it / 2 } +
+                            fadeIn(tween(320))) togetherWith
+                            (slideOutVertically(tween(200)) { -it / 2 } + fadeOut(tween(140)))
+                    },
+                    label = "stepCounter"
+                ) { n ->
+                    Text(
+                        stringResource(R.string.domain_step_of, n, tourPages.size),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
                 TextButton(onClick = onDone) {
                     Text(stringResource(R.string.onboarding_skip))
                 }
@@ -415,7 +557,7 @@ private fun TourPager(onDone: () -> Unit) {
                     .fillMaxWidth()
                     .weight(1f)
             ) { page ->
-                TourPageContent(tourPages[page])
+                TourPageContent(tourPages[page], pager, page)
             }
 
             // Dots + action.
@@ -426,26 +568,7 @@ private fun TourPager(onDone: () -> Unit) {
                     .padding(bottom = 22.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    repeat(tourPages.size) { i ->
-                        val selected = pager.currentPage == i
-                        val w by animateDpAsState(
-                            targetValue = if (selected) 26.dp else 8.dp,
-                            animationSpec = tween(280),
-                            label = "dotW"
-                        )
-                        Box(
-                            Modifier
-                                .width(w)
-                                .height(8.dp)
-                                .clip(RoundedCornerShape(4.dp))
-                                .background(
-                                    if (selected) stratosGlowBrush()
-                                    else MaterialTheme.colorScheme.outlineVariant
-                                )
-                        )
-                    }
-                }
+                TourDots(pager)
                 Spacer(Modifier.height(20.dp))
                 GlowButton(
                     onClick = {
@@ -473,56 +596,131 @@ private fun TourPager(onDone: () -> Unit) {
     }
 }
 
+/**
+ * Tour dot indicator: springy width, animated color, and a breathing plasma
+ * glow behind the active dot. Width change is a spring (bounce), color a
+ * quick tween, glow drawn in the draw phase.
+ */
 @Composable
-private fun TourPageContent(page: TourPage) {
+private fun TourDots(pager: PagerState) {
+    val glow = rememberInfiniteTransition(label = "dotGlow").animateFloat(
+        initialValue = 0.35f,
+        targetValue = 1f,
+        animationSpec = infiniteRepeatable(tween(1200, easing = LinearEasing), RepeatMode.Reverse),
+        label = "dotGlowA"
+    )
+    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        repeat(tourPages.size) { i ->
+            val selected = pager.currentPage == i
+            val w by animateDpAsState(
+                targetValue = if (selected) 26.dp else 8.dp,
+                animationSpec = spring(dampingRatio = 0.65f, stiffness = 520f),
+                label = "dotW"
+            )
+            val dotColor by animateColorAsState(
+                if (selected) StratosColors.GlowA else MaterialTheme.colorScheme.outlineVariant,
+                animationSpec = tween(300),
+                label = "dotC"
+            )
+            Box(
+                Modifier
+                    .width(w)
+                    .height(8.dp)
+                    .drawBehind {
+                        if (selected) {
+                            drawCircle(
+                                brush = Brush.radialGradient(
+                                    colors = listOf(
+                                        StratosColors.GlowB.copy(alpha = 0.55f * glow.value),
+                                        Color.Transparent
+                                    ),
+                                    radius = size.maxDimension
+                                )
+                            )
+                        }
+                    }
+                    .clip(RoundedCornerShape(4.dp))
+                    .background(dotColor)
+            )
+        }
+    }
+}
+
+/**
+ * One tour page. Two independent motion systems compose here:
+ *
+ *  · ENTRANCE — one shared Animatable drives a choreographed sequence:
+ *    hero pops (EaseOutBack overshoot) → title lifts in → body lifts in →
+ *    the three bullet rows cascade, each check-icon popping with a spring.
+ *    Replayed every time the page re-enters the viewport.
+ *  · PARALLAX — while swiping, the hero, text and bullets translate at
+ *    different depths and the whole layer fades near the edge; offsets are
+ *    read from the pager state inside graphicsLayer lambdas (draw phase).
+ */
+@Composable
+private fun TourPageContent(page: TourPage, pager: PagerState, index: Int) {
+    val enter = remember { Animatable(0f) }
+    LaunchedEffect(Unit) {
+        delay(40)
+        enter.animateTo(1f, tween(720, easing = FastOutSlowInEasing))
+    }
+
     Column(
         Modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
+            .graphicsLayer {
+                // Whole-layer depth fade near the page edges while swiping.
+                val off = (pager.currentPage - index) + pager.currentPageOffsetFraction
+                alpha = 1f - 0.38f * abs(off).coerceIn(0f, 1f)
+            }
             .padding(horizontal = 28.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Gradient hero tile with halo.
-        Box(contentAlignment = Alignment.Center) {
-            Box(
-                Modifier
-                    .size(132.dp)
-                    .drawBehind {
-                        drawCircle(
-                            brush = Brush.radialGradient(
-                                colors = listOf(
-                                    StratosColors.GlowB.copy(alpha = 0.26f),
-                                    Color.Transparent
-                                ),
-                                radius = size.minDimension / 2f
-                            )
-                        )
-                    }
-            )
-            Box(
-                Modifier
-                    .size(88.dp)
-                    .clip(RoundedCornerShape(28.dp))
-                    .background(stratosGlowBrush())
-                    .border(
-                        1.dp,
-                        Brush.linearGradient(
-                            listOf(
-                                Color.White.copy(alpha = 0.5f),
-                                Color.White.copy(alpha = 0.12f)
-                            )
-                        ),
-                        RoundedCornerShape(28.dp)
-                    ),
-                contentAlignment = Alignment.Center
+        // Hero: aura stage (ring + orbits + halo) + breathing gradient tile.
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier.graphicsLayer {
+                val off = (pager.currentPage - index) + pager.currentPageOffsetFraction
+                translationX = off * 26.dp.toPx()
+                val w = window(enter.value, 0f, 0.42f)
+                val s = (0.82f + 0.18f * EaseOutBack.transform(w)).coerceAtLeast(0f)
+                scaleX = s
+                scaleY = s
+            }
+        ) {
+            AuraStage(
+                sizeDp = 148,
+                ring = true,
+                haloColor = StratosColors.GlowB,
+                haloAlpha = 0.26f,
+                breatheContent = true
             ) {
-                Icon(
-                    page.icon,
-                    contentDescription = null,
-                    tint = Color.White,
-                    modifier = Modifier.size(42.dp)
-                )
+                Box(
+                    Modifier
+                        .size(88.dp)
+                        .clip(RoundedCornerShape(28.dp))
+                        .background(stratosGlowBrush())
+                        .border(
+                            1.dp,
+                            Brush.linearGradient(
+                                listOf(
+                                    Color.White.copy(alpha = 0.5f),
+                                    Color.White.copy(alpha = 0.12f)
+                                )
+                            ),
+                            RoundedCornerShape(28.dp)
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        page.icon,
+                        contentDescription = null,
+                        tint = Color.White,
+                        modifier = Modifier.size(42.dp)
+                    )
+                }
             }
         }
 
@@ -531,22 +729,38 @@ private fun TourPageContent(page: TourPage) {
             stringResource(page.titleRes),
             color = MaterialTheme.colorScheme.onBackground,
             style = MaterialTheme.typography.headlineMedium,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.graphicsLayer {
+                val w = window(enter.value, 0.16f, 0.56f)
+                alpha = w
+                translationY = (1f - w) * 30f
+                translationX = ((pager.currentPage - index) + pager.currentPageOffsetFraction) * 12.dp.toPx()
+            }
         )
         Spacer(Modifier.height(12.dp))
         Text(
             stringResource(page.bodyRes),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodyLarge,
-            textAlign = TextAlign.Center
+            textAlign = TextAlign.Center,
+            modifier = Modifier.graphicsLayer {
+                val w = window(enter.value, 0.28f, 0.68f)
+                alpha = w
+                translationY = (1f - w) * 24f
+            }
         )
         Spacer(Modifier.height(26.dp))
 
-        page.points.forEach { pointRes ->
+        page.points.forEachIndexed { i, pointRes ->
             Row(
                 Modifier
                     .fillMaxWidth()
                     .padding(vertical = 7.dp)
+                    .graphicsLayer {
+                        val w = window(enter.value, 0.38f + i * 0.11f, 0.70f + i * 0.11f)
+                        alpha = w
+                        translationY = (1f - w) * 22f
+                    }
                     .stratosGlass(RoundedCornerShape(16.dp))
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically
@@ -567,7 +781,15 @@ private fun TourPageContent(page: TourPage) {
                         Icons.Filled.Check,
                         contentDescription = null,
                         tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(15.dp)
+                        modifier = Modifier
+                            .size(15.dp)
+                            .graphicsLayer {
+                                // The check pops last — overshoot then settle.
+                                val w = window(enter.value, 0.46f + i * 0.11f, 0.78f + i * 0.11f)
+                                val s = (EaseOutBack.transform(w)).coerceAtLeast(0f)
+                                scaleX = s
+                                scaleY = s
+                            }
                     )
                 }
                 Spacer(Modifier.width(12.dp))
@@ -642,86 +864,101 @@ private fun PermissionsScreen(onFinish: () -> Unit) {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(Modifier.height(22.dp))
-            Text(
-                stringResource(R.string.perm_title),
-                color = MaterialTheme.colorScheme.onBackground,
-                style = MaterialTheme.typography.headlineMedium,
-                textAlign = TextAlign.Center
-            )
+            StaggerIn(index = 0) {
+                Text(
+                    stringResource(R.string.perm_title),
+                    color = MaterialTheme.colorScheme.onBackground,
+                    style = MaterialTheme.typography.headlineMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
             Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.perm_subtitle),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-                textAlign = TextAlign.Center
-            )
+            StaggerIn(index = 1) {
+                Text(
+                    stringResource(R.string.perm_subtitle),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodyMedium,
+                    textAlign = TextAlign.Center
+                )
+            }
             Spacer(Modifier.height(22.dp))
 
             // Notifications — required for background hosting status on 13+.
-            PermissionCard(
-                icon = Icons.Filled.Notifications,
-                title = stringResource(R.string.perm_notif_title),
-                body = stringResource(R.string.perm_notif_body),
-                granted = notifGranted,
-                supported = true,
-                actionLabel = stringResource(R.string.perm_allow),
-                onAction = {
-                    if (Build.VERSION.SDK_INT >= 33) {
-                        notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            StaggerIn(index = 2) {
+                PermissionCard(
+                    icon = Icons.Filled.Notifications,
+                    title = stringResource(R.string.perm_notif_title),
+                    body = stringResource(R.string.perm_notif_body),
+                    granted = notifGranted,
+                    supported = true,
+                    actionLabel = stringResource(R.string.perm_allow),
+                    onAction = {
+                        if (Build.VERSION.SDK_INT >= 33) {
+                            notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                        }
                     }
-                }
-            )
+                )
+            }
 
             // Legacy storage — only exists up to Android 12; modern Android
             // grants ZIP access through the picker/share target with no permission.
             if (legacyStorageNeeded) {
-                PermissionCard(
-                    icon = Icons.Filled.FolderOpen,
-                    title = stringResource(R.string.perm_files_title),
-                    body = stringResource(R.string.perm_files_body),
-                    granted = storageGranted,
-                    supported = true,
-                    actionLabel = stringResource(R.string.perm_allow),
-                    onAction = { storageLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE) }
-                )
+                StaggerIn(index = 3) {
+                    PermissionCard(
+                        icon = Icons.Filled.FolderOpen,
+                        title = stringResource(R.string.perm_files_title),
+                        body = stringResource(R.string.perm_files_body),
+                        granted = storageGranted,
+                        supported = true,
+                        actionLabel = stringResource(R.string.perm_allow),
+                        onAction = { storageLauncher.launch(Manifest.permission.READ_EXTERNAL_STORAGE) }
+                    )
+                }
             }
 
             // Battery optimization exemption — keeps the server alive.
-            PermissionCard(
-                icon = Icons.Filled.Bolt,
-                title = stringResource(R.string.perm_battery_title),
-                body = stringResource(R.string.perm_battery_body),
-                granted = batteryGranted,
-                supported = true,
-                actionLabel = stringResource(R.string.perm_open_settings),
-                onAction = { requestBatteryExemption(context) }
-            )
-
-            Spacer(Modifier.height(8.dp))
-            Text(
-                stringResource(R.string.diag_privacy),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-
-            Spacer(Modifier.height(24.dp))
-            GlowButton(
-                onClick = onFinish,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text(
-                    stringResource(R.string.perm_finish),
-                    color = Color.White,
-                    style = MaterialTheme.typography.labelLarge
+            StaggerIn(index = if (legacyStorageNeeded) 4 else 3) {
+                PermissionCard(
+                    icon = Icons.Filled.Bolt,
+                    title = stringResource(R.string.perm_battery_title),
+                    body = stringResource(R.string.perm_battery_body),
+                    granted = batteryGranted,
+                    supported = true,
+                    actionLabel = stringResource(R.string.perm_open_settings),
+                    onAction = { requestBatteryExemption(context) }
                 )
             }
-            TextButton(onClick = onFinish) {
+
+            Spacer(Modifier.height(8.dp))
+            StaggerIn(index = 5) {
                 Text(
-                    stringResource(R.string.perm_later),
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                    stringResource(R.string.diag_privacy),
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 8.dp)
                 )
+            }
+
+            Spacer(Modifier.height(24.dp))
+            StaggerIn(index = 6) {
+                GlowButton(
+                    onClick = onFinish,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        stringResource(R.string.perm_finish),
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                }
+                Spacer(Modifier.height(4.dp))
+                TextButton(onClick = onFinish, modifier = Modifier.fillMaxWidth()) {
+                    Text(
+                        stringResource(R.string.perm_later),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
             Spacer(Modifier.height(16.dp))
         }
@@ -755,6 +992,21 @@ private fun PermissionCard(
     onAction: () -> Unit
 ) {
     val shape = RoundedCornerShape(20.dp)
+
+    // Grant moment: the status pill morphs color and pulses once (spring).
+    val pillScale = remember { Animatable(1f) }
+    LaunchedEffect(granted) {
+        if (granted) {
+            pillScale.snapTo(1.35f)
+            pillScale.animateTo(1f, spring(dampingRatio = 0.45f, stiffness = 520f))
+        }
+    }
+    val statusColor by animateColorAsState(
+        if (granted) StratosColors.Success else StratosColors.Warning,
+        animationSpec = tween(300),
+        label = "statusColor"
+    )
+
     Column(
         Modifier
             .fillMaxWidth()
@@ -781,8 +1033,12 @@ private fun PermissionCard(
             )
             Pill(
                 text = stringResource(if (granted) R.string.perm_allowed else R.string.perm_not_yet),
-                container = if (granted) StratosColors.Success else StratosColors.Warning,
-                content = if (granted) StratosColors.Success else StratosColors.Warning
+                container = statusColor,
+                content = statusColor,
+                modifier = Modifier.graphicsLayer {
+                    scaleX = pillScale.value
+                    scaleY = pillScale.value
+                }
             )
         }
         Spacer(Modifier.height(10.dp))

@@ -188,6 +188,40 @@ for f in list(ROOT.glob("app/src/main/**/*.kt")) + list(ROOT.glob("*.md")) + lis
             ph.append(f"{f.name}:{i}")
 check(not ph, "no leftover placeholders", f"placeholders at: {ph}")
 
+# ------------------------------------------------------------------- fonts ----
+section("Bundled Arabic font (Cairo)")
+font_dir = ROOT / "app/src/main/res/font"
+expected = {
+    "cairo_regular.ttf": 400,
+    "cairo_medium.ttf": 500,
+    "cairo_semibold.ttf": 600,
+    "cairo_bold.ttf": 700,
+}
+for name, weight in expected.items():
+    f = font_dir / name
+    ok = f.exists() and f.stat().st_size > 40_000 and f.read_bytes()[:4] in (
+        b"\x00\x01\x00\x00", b"OTTO")
+    check(ok, f"{name} present (weight {weight})",
+          f"{name} missing/corrupt in res/font")
+names = {p.name for p in font_dir.glob("*")} if font_dir.exists() else set()
+check(names == set(expected),
+      "res/font contains only the four Cairo TTFs (AAPT-safe lowercase names)",
+      f"unexpected files in res/font: {sorted(names - set(expected))}")
+typekt = (ROOT / "app/src/main/java/app/stratos/host/ui/theme/Type.kt")
+tk = typekt.read_text(encoding="utf-8") if typekt.exists() else ""
+check(all(f"R.font.{n[:-4]}" in tk for n in expected),
+      "Type.kt wires all four font weights", "Type.kt missing R.font wiring")
+check("letterSpacing = 0.sp" in tk,
+      "shared typography is tracking-free (Arabic joining safe)",
+      "shared typography must keep letterSpacing = 0 (Arabic joining)")
+ofl = ROOT / "docs/licenses/Cairo-OFL.txt"
+check(ofl.exists() and "Open Font License" in ofl.read_text(encoding="utf-8", errors="ignore"),
+      "Cairo OFL license text present in docs/licenses",
+      "docs/licenses/Cairo-OFL.txt missing or not OFL")
+notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
+check("Cairo" in notices and "Open Font License" in notices,
+      "third-party notices cover the Cairo font", "THIRD_PARTY_NOTICES.md missing font section")
+
 # ------------------------------------------------------------------ engine ----
 section("Go engine")
 check((ROOT / "engine/go.mod").exists(), "engine/go.mod present", "engine/go.mod missing")
