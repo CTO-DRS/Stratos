@@ -23,7 +23,7 @@ class ZipSecurityTest {
     val tmp = TemporaryFolder()
 
     private fun zipOf(entries: Map<String, String>): File {
-        val f = tmp.newFile("site.zip")
+        val f = tmp.newFile("site-${System.nanoTime()}.zip")
         ZipOutputStream(f.outputStream()).use { zos ->
             entries.forEach { (name, content) ->
                 zos.putNextEntry(ZipEntry(name))
@@ -31,6 +31,49 @@ class ZipSecurityTest {
                 zos.closeEntry()
             }
         }
+        return f
+    }
+
+    /**
+     * Builds a raw STORE-method ZIP containing `dups` identical entries.
+     * JDK's ZipOutputStream refuses to write duplicate names, so the bytes
+     * are written by hand (valid central directory + EOCD, stored method).
+     */
+    private fun rawDuplicateZip(dups: Int): File {
+        val f = tmp.newFile("dup-${System.nanoTime()}.zip")
+        val name = "a.txt".toByteArray(Charsets.US_ASCII)
+        val data = "x".toByteArray()
+        val crc = java.util.zip.CRC32().apply { update(data) }.value
+        fun le(b: java.io.ByteArrayOutputStream, v: Int, n: Int) {
+            for (i in 0 until n) b.write((v shr (8 * i)) and 0xFF)
+        }
+        val local = java.io.ByteArrayOutputStream()
+        val central = java.io.ByteArrayOutputStream()
+        var offset = 0
+        repeat(dups) {
+            offset += local.size()
+            le(local, 0x04034b50, 4); le(local, 20, 2); le(local, 0, 2); le(local, 0, 2)
+            le(local, 0, 2); le(local, 0, 2)
+            le(local, crc.toInt(), 4); le(local, data.size, 4); le(local, data.size, 4)
+            le(local, name.size, 2); le(local, 0, 2)
+            local.write(name); local.write(data)
+
+            le(central, 0x02014b50, 4); le(central, 20, 2); le(central, 20, 2)
+            le(central, 0, 2); le(central, 0, 2); le(central, 0, 2); le(central, 0, 2)
+            le(central, crc.toInt(), 4); le(central, data.size, 4); le(central, data.size, 4)
+            le(central, name.size, 2); le(central, 0, 2)
+            le(central, 0, 2); le(central, 0, 2); le(central, 0, 2); le(central, 0, 4)
+            le(central, offset, 4)
+            central.write(name)
+        }
+        val cd = central.toByteArray()
+        val eocd = java.io.ByteArrayOutputStream()
+        le(eocd, 0x06054b50, 4); le(eocd, 0, 2); le(eocd, 0, 2)
+        le(eocd, dups, 2); le(eocd, dups, 2); le(eocd, cd.size, 4)
+        // The central directory starts right after ALL local records.
+        le(eocd, local.size(), 4)
+        le(eocd, 0, 2)
+        f.writeBytes(local.toByteArray() + cd + eocd.toByteArray())
         return f
     }
 
@@ -98,14 +141,7 @@ class ZipSecurityTest {
 
     @Test
     fun `duplicate names rejected`() {
-        val f = tmp.newFile("dup.zip")
-        ZipOutputStream(f.outputStream()).use { zos ->
-            repeat(2) {
-                zos.putNextEntry(ZipEntry("a.txt"))
-                zos.write("x".toByteArray())
-                zos.closeEntry()
-            }
-        }
+        val f = rawDuplicateZip(2)
         try {
             ZipSecurity.validateAndExtract(f, tmp.newFolder("c"))
             fail("expected rejection")

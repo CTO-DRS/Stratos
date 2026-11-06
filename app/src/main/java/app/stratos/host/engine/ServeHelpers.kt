@@ -43,6 +43,9 @@ fun normalize(relIn: String): String? {
         return null
     }
     if (decoded.contains('\u0000')) return null
+    // fs.ValidPath-equivalent: reject any ".." element (also covers %2e%2e
+    // after decoding), mirroring the Go engine's pre-I/O traversal refusal.
+    if (decoded.contains("..")) return null
     var p = java.nio.file.Paths.get("/" + decoded.replace('\\', '/')).normalize().toString()
     if (p == "/" || p.isEmpty()) p = "."
     if (p.startsWith("/")) p = p.substring(1)

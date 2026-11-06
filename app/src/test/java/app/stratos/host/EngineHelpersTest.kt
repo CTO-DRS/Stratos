@@ -44,7 +44,7 @@ class EngineHelpersTest {
     fun `resolve stays inside the root`() {
         val root = tmp.newFolder("root")
         val inside = File(root, "sub/index.html")
-        inside.parentFile.mkdirs()
+        inside.parentFile?.mkdirs()
         inside.writeText("x")
 
         assertEquals(inside.canonicalFile, resolveConfined(root, "sub/index.html"))
