@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stratos mark: three stacked server layers, geometric and minimal. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <group android:scaleX="0.5" android:scaleY="0.5" android:translateX="27" android:translateY="27">
+        <path
+            android:fillColor="#0A0A0A"
+            android:pathData="M18,22 L90,22 A6,6 0 0 1 96,28 L96,42 A6,6 0 0 1 90,48 L18,48 A6,6 0 0 1 12,42 L12,28 A6,6 0 0 1 18,22 Z M20,30 A3,3 0 1 0 20,36 A3,3 0 0 0 20,30 Z" />
+        <path
+            android:fillColor="#0A0A0A"
+            android:pathData="M18,56 L90,56 A6,6 0 0 1 96,62 L96,76 A6,6 0 0 1 90,82 L18,82 A6,6 0 0 1 12,76 L12,62 A6,6 0 0 1 18,56 Z M20,64 A3,3 0 1 0 20,70 A3,3 0 0 0 20,64 Z" />
+        <path
+            android:fillColor="#0A7CFF"
+            android:pathData="M30,36 L86,36 A2,2 0 0 1 88,38 L88,40 A2,2 0 0 1 86,42 L30,42 A2,2 0 0 1 28,40 L28,38 A2,2 0 0 1 30,36 Z" />
+        <path
+            android:fillColor="#0A7CFF"
+            android:pathData="M30,70 L86,70 A2,2 0 0 1 88,72 L88,74 A2,2 0 0 1 86,76 L30,76 A2,2 0 0 1 28,74 L28,72 A2,2 0 0 1 30,70 Z" />
+    </group>
+</vector>

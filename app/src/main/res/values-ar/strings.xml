@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stratos</string>
+    <!-- التنقل -->
+    <string name="nav_dashboard">الخادم</string>
+    <string name="nav_sites">المواقع</string>
+    <string name="nav_ai">بنّاء AI</string>
+    <string name="nav_metrics">المقاييس</string>
+    <string name="nav_tunnel">النفق</string>
+    <string name="settings">الإعدادات</string>
+    <string name="back">رجوع</string>
+    <string name="close">إغلاق</string>
+    <string name="cancel">إلغاء</string>
+    <string name="save">حفظ</string>
+    <string name="apply">تطبيق</string>
+    <string name="on">مفعّل</string>
+    <string name="off">معطّل</string>
+    <string name="copy">نسخ</string>
+    <string name="open">فتح</string>
+    <string name="refresh">تحديث</string>
+    <string name="more">المزيد</string>
+    <string name="edit">تحرير</string>
+    <string name="delete">حذف</string>
+    <string name="qr">رمز QR</string>
+
+    <!-- حالات الاستضافة -->
+    <string name="state_running">الاستضافة تعمل</string>
+    <string name="state_stopped">متوقفة</string>
+    <string name="state_transition">جارٍ العمل…</string>
+    <string name="state_failed">فشل</string>
+    <string name="start_hosting">ابدأ الاستضافة</string>
+    <string name="stop_hosting">أوقف الاستضافة</string>
+
+    <!-- الإحصاءات -->
+    <string name="stat_requests">الطلبات</string>
+    <string name="stat_active">الاتصالات النشطة</string>
+    <string name="stat_p50">زمن الاستجابة p50</string>
+    <string name="stat_p95">زمن الاستجابة p95</string>
+    <string name="stat_max">أقصى زمن</string>
+
+    <!-- اللوحة -->
+    <string name="default_site">الموقع الافتراضي</string>
+    <string name="manage_sites">إدارة</string>
+    <string name="no_default_site">لم تستورد أي موقع بعد. توجه إلى «المواقع» واستورد ملف ZIP — سيظهر موقعك خلال ثوانٍ.</string>
+    <string name="index_ok">يوجد index.html</string>
+    <string name="index_missing">لا يوجد index.html</string>
+    <string name="qr_title">امسح للفتح من نفس شبكة Wi-Fi</string>
+    <string name="files_unit">ملف</string>
+    <string name="default_badge">افتراضي</string>
+
+    <!-- المواقع -->
+    <string name="import_site">استيراد موقع</string>
+    <string name="sites_empty_title">لا توجد مواقع بعد</string>
+    <string name="sites_empty_body">استورد ملف ZIP من أي أداة AI لبناء المواقع. يفحصه ستراتوس (تجاوز المسارات، الروابط الرمزية، القنابل، CRC) ثم يستضيفه على هاتفك.</string>
+    <string name="importing">جارٍ الاستيراد…</string>
+    <string name="import_working">فحص أمني واستخراج آمن…</string>
+    <string name="import_rejected">رُفض الاستيراد</string>
+    <string name="import_preview_title">راجع قبل الاستيراد</string>
+    <string name="import_summary">%1$d ملف · %2$s بعد الاستخراج</string>
+    <string name="import_root">الجذر: %1$s</string>
+    <string name="import_confirm">استورد واستضف</string>
+    <string name="site_name">اسم الموقع</string>
+    <string name="spa_mode">وضع SPA (الرجوع إلى index.html)</string>
+    <string name="set_default">تعيين كافتراضي</string>
+    <string name="open_editor">فتح في المحرر</string>
+    <string name="replace_content">استبدال المحتوى…</string>
+    <string name="delete_site">حذف الموقع</string>
+    <string name="delete_site_title">حذف هذا الموقع؟</string>
+    <string name="delete_site_body">سيُحذف «%1$s» مع جميع ملفاته من الجهاز. لا يمكن التراجع.</string>
+
+    <!-- المحرر -->
+    <string name="editor">المحرر</string>
+    <string name="tab_files">الملفات</string>
+    <string name="tab_preview">معاينة</string>
+    <string name="editor_pick_file">اختر ملفاً من الشجرة</string>
+    <string name="preview_needs_hosting">تحتاج المعاينة إلى تشغيل الاستضافة أولاً (تُحمَّل عبر الخادم الحقيقي على loopback).</string>
+
+    <!-- المقاييس -->
+    <string name="reset">تصفير</string>
+    <string name="engine_live">المحرك يعمل</string>
+    <string name="engine_idle">المحرك متوقف</string>
+    <string name="metric_rps">الطلبات في الثانية</string>
+    <string name="metric_no_data">لم تُسجَّل أي طلبات بعد.</string>
+    <string name="metric_status_codes">رموز الاستجابة</string>
+    <string name="metric_device">الجهاز</string>
+    <string name="metric_device_src">قياس مباشر على الجهاز</string>
+    <string name="metric_memory">الذاكرة</string>
+    <string name="metric_cpu">المعالج</string>
+    <string name="metric_storage">التخزين</string>
+    <string name="metric_battery_temp">حرارة البطارية</string>
+    <string name="metric_rx">مُستلم</string>
+    <string name="metric_tx">مُرسل</string>
+    <string name="metric_unavailable">غير متاح</string>
+
+    <!-- النفق -->
+    <string name="tunnel_needs_hosting">ابدأ الاستضافة أولاً — النفق يمرر الزيارات إلى خادمك المحلي.</string>
+    <string name="tunnel_quick_title">النفق السريع</string>
+    <string name="tunnel_quick_body">عنوان مؤقت https://*.trycloudflare.com بدون حساب Cloudflare. يتغير العنوان في كل تشغيل.</string>
+    <string name="tunnel_quick_connect">احصل على رابط عام</string>
+    <string name="tunnel_named_title">النفق المسمّى</string>
+    <string name="tunnel_named_body">اسم نطاق دائم عبر توكن Cloudflare. يُخزَّن التوكن مشفراً بـ AES-256-GCM على هذا الجهاز فقط ولا يُرسل لأي جهة أخرى.</string>
+    <string name="tunnel_named_connect">وصّل النفق المسمّى</string>
+    <string name="tunnel_connected">متصل</string>
+    <string name="tunnel_connecting">جارٍ الاتصال…</string>
+    <string name="tunnel_error">خطأ</string>
+    <string name="tunnel_off">متوقف</string>
+    <string name="disconnect">قطع الاتصال</string>
+    <string name="tunnel_token_saved">التوكن محفوظ</string>
+    <string name="tunnel_token_missing">لا توكن</string>
+    <string name="tunnel_token_manage">إدارة التوكن</string>
+    <string name="tunnel_token_title">توكن نفق Cloudflare</string>
+    <string name="tunnel_token_help">Cloudflare Zero Trust ← Networks ← Tunnels ← نفرك ← انسخ التوكن من الأمر «cloudflared service install eyJ…».</string>
+    <string name="tunnel_token_field">eyJ…</string>
+    <string name="tunnel_token_present">يوجد توكن مشفَّر محفوظ على هذا الجهاز.</string>
+    <string name="tunnel_token_clear">إزالة</string>
+    <string name="tunnel_logs">ذيل السجل (معتم)</string>
+    <string name="tunnel_logs_empty">لا مخرجات للنفق بعد.</string>
+
+    <!-- بنّاء AI -->
+    <string name="ai_title">أنشئ موقعاً بلمسة واحدة</string>
+    <string name="ai_subtitle">صِف موقعك؛ يولّد ستراتوس موقعاً كاملاً بملف واحد جاهزاً للاستضافة فوراً. يعمل دون اتصال تماماً أو بمفتاح AI خاص بك.</string>
+    <string name="ai_mode_offline">قالب دون اتصال</string>
+    <string name="ai_mode_api">واجهة AI</string>
+    <string name="ai_key_needed_settings">لا يوجد مفتاح API محفوظ — أضف واحداً من الإعدادات أو استخدم وضع القالب.</string>
+    <string name="ai_endpoint_set">النقطة: %1$s</string>
+    <string name="ai_site_name">اسم الموقع</string>
+    <string name="ai_tagline">العنوان الرئيسي (Hero)</string>
+    <string name="ai_about">عن نشاطك</string>
+    <string name="ai_services_hint">الخدمات — سطر لكل خدمة</string>
+    <string name="ai_phone">الهاتف</string>
+    <string name="ai_email">البريد الإلكتروني</string>
+    <string name="ai_address">العنوان</string>
+    <string name="ai_language">لغة المحتوى</string>
+    <string name="ai_palette">اللون المميز</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_en">English</string>
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_system">حسب النظام</string>
+    <string name="palette_blue">أزرق</string>
+    <string name="palette_emerald">زمردي</string>
+    <string name="palette_violet">بنفسجي</string>
+    <string name="palette_mono">أحادي</string>
+    <string name="ai_generate">ولّد الموقع</string>
+    <string name="ai_generated_title">موقعك جاهز</string>
+    <string name="ai_generated_size">%1$d كيلوبايت · ملف HTML واحد مكتفٍ بذاته</string>
+    <string name="ai_save_site">احفظ واستضف</string>
+    <string name="ai_failed">فشل التوليد</string>
+    <string name="ai_key_saved">المفتاح محفوظ</string>
+
+    <!-- الإعدادات -->
+    <string name="settings_server">الخادم</string>
+    <string name="settings_port">المنفذ</string>
+    <string name="settings_port_hint">1024–65535. يتحدّث رابط الشبكة تلقائياً؛ تأكد أن مسارات النفق تشير لنفس المنفذ.</string>
+    <string name="settings_bind">نطاق الوصول</string>
+    <string name="settings_bind_lan">نفس شبكة Wi-Fi</string>
+    <string name="settings_bind_loopback">هذا الجهاز فقط</string>
+    <string name="settings_spa">وضع SPA الافتراضي للمواقع الجديدة</string>
+    <string name="settings_appearance">المظهر واللغة</string>
+    <string name="settings_language">لغة التطبيق</string>
+    <string name="settings_theme">الثيم</string>
+    <string name="theme_light">فاتح</string>
+    <string name="theme_dark">داكن</string>
+    <string name="theme_system">حسب النظام</string>
+    <string name="settings_ai">مزود الذكاء الاصطناعي</string>
+    <string name="settings_ai_endpoint">عنوان API الأساسي</string>
+    <string name="settings_ai_endpoint_hint">متوافق مع OpenAI. أمثلة: https://api.z.ai/api/paas/v4 · https://api.openai.com/v1 · https://openrouter.ai/api/v1</string>
+    <string name="settings_ai_model">الموديل</string>
+    <string name="settings_ai_key_add">إضافة مفتاح API</string>
+    <string name="settings_ai_key_change">تغيير مفتاح API</string>
+    <string name="settings_ai_key_title">مفتاح AI</string>
+    <string name="settings_ai_key_body">يُخزَّن بتشفير Android Keystore AES-256-GCM على هذا الجهاز فقط — لا يُرفع ولا يُسجَّل ولا يُعرض مجدداً.</string>
+    <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_diagnostics">تشخيص</string>
+    <string name="diag_engine">المحرك</string>
+    <string name="diag_lan">عنوان الشبكة المحلية</string>
+    <string name="diag_cloudflared">ملف cloudflared</string>
+    <string name="diag_found">موجود</string>
+    <string name="diag_missing">غير مثبت (النفق السريع والمسمّى معطلان)</string>
+    <string name="diag_privacy">ستراتوس بلا حسابات ولا إعلانات ولا تحليلات ولا تتبع. كل شيء يبقى على هذا الجهاز.</string>
+
+    <!-- معالج النطاق المخصص -->
+    <string name="domain_wizard_title">نطاق مخصص</string>
+    <string name="domain_step_of">الخطوة %1$d من %2$d</string>
+    <string name="domain_card_title">نطاق مخصص</string>
+    <string name="domain_card_body">وجّه نطاقك الخاص إلى النفق المسمّى — معالج موجَّه من 5 خطوات، من التوكن حتى فحص HTTPS فعلي.</string>
+    <string name="domain_card_saved">محفوظ</string>
+    <string name="domain_card_none">غير مضبوط</string>
+    <string name="domain_card_manage">إعداد / إدارة</string>
+    <string name="domain_s1_title">عنوان مضيفك</string>
+    <string name="domain_s1_body">اكتب النطاق أو النطاق الفرعي الذي تريد أن يظهر موقعك تحته.</string>
+    <string name="domain_field">your-domain.com</string>
+    <string name="domain_invalid">اسم مضيف غير صالح. استخدم أحرفاً وأرقاماً وشرطات مع نقطة واحدة على الأقل.</string>
+    <string name="domain_bare_hint">نصيحة: للنطاق الجذري أنشئ أيضاً سجل www يشير إلى الهدف نفسه.</string>
+    <string name="domain_next">متابعة</string>
+    <string name="domain_s2_title">الصق توكن النفق</string>
+    <string name="domain_token_help">الصق توكن نفق Cloudflare نفسه من الأمر «cloudflared service install eyJ…». يقرأ المعالج منه معرّف النفق العام فقط — السر لا يُفكَّ ولا يُعرَض ولا يُخزَّن هنا إطلاقاً.</string>
+    <string name="domain_token_invalid">تعذّرت قراءة معرّف النفق من هذا التوكن. تأكد من نسخ قيمة eyJ… كاملة.</string>
+    <string name="domain_s3_title">تم فك معرّف النفق</string>
+    <string name="domain_s3_body">راجع القيم ثم أنشئ سجل DNS في الخطوة التالية.</string>
+    <string name="domain_tunnel_id">معرّف النفق</string>
+    <string name="domain_cname_target">هدف CNAME</string>
+    <string name="domain_s4_title">أنشئ سجل DNS</string>
+    <string name="domain_dns_type">النوع: CNAME</string>
+    <string name="domain_dns_name">الاسم: @ لـ %1$s، أو www</string>
+    <string name="domain_dns_proxy">حالة الوسيط: مفعّلة (السحابة البرتقالية)</string>
+    <string name="domain_dns_note">قد يستغرق نشر تغييرات DNS بضع دقائق.</string>
+    <string name="domain_s5_title">تحقّق من HTTPS</string>
+    <string name="domain_verify_body">شغّل الاستضافة، ووصّل النفق المسمّى من تبويب «النفق»، ثم تحقق أن نطاقك يقدّم الموقع.</string>
+    <string name="domain_verify_btn">تحقّق الآن</string>
+    <string name="domain_verify_checking">جارٍ فحص https://…</string>
+    <string name="domain_verify_ok">يعمل عبر HTTPS</string>
+    <string name="domain_verify_fail">غير متاح بعد</string>
+    <string name="domain_verify_fail_hint">تحقق من سجل DNS ومن حالة النفق المسمّى ومن أن الاستضافة تعمل. قد يستغرق النشر بضع دقائق.</string>
+    <string name="domain_save_anyway">احفظ على أي حال</string>
+    <string name="domain_saved">حُفظ النطاق — سيظهر في شاشة «النفق».</string>
+    <string name="domain_done">تم</string>
+
+    <!-- الإشعارات -->
+    <string name="notif_channel_name">الاستضافة</string>
+    <string name="notif_channel_desc">يُبقي خادم الويب يعمل في الخلفية</string>
+    <string name="notif_title_running">ستراتوس يستضيف موقعك</string>
+    <string name="notif_text_running">انقر للفتح · الزوار على شبكتك يستطيعون التصفح الآن</string>
+    <string name="notif_title_starting">ستراتوس يبدأ التشغيل…</string>
+    <string name="notif_text_starting">تهيئة الخادم المدمج</string>
+    <string name="notif_action_stop">إيقاف</string>
+</resources>

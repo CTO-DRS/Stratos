@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stratos</string>
+    <!-- Navigation -->
+    <string name="nav_dashboard">Server</string>
+    <string name="nav_sites">Sites</string>
+    <string name="nav_ai">AI Builder</string>
+    <string name="nav_metrics">Metrics</string>
+    <string name="nav_tunnel">Tunnel</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="close">Close</string>
+    <string name="cancel">Cancel</string>
+    <string name="save">Save</string>
+    <string name="apply">Apply</string>
+    <string name="on">On</string>
+    <string name="off">Off</string>
+    <string name="copy">Copy</string>
+    <string name="open">Open</string>
+    <string name="refresh">Refresh</string>
+    <string name="more">More</string>
+    <string name="edit">Edit</string>
+    <string name="delete">Delete</string>
+    <string name="qr">QR</string>
+
+    <!-- Hosting states -->
+    <string name="state_running">Hosting is live</string>
+    <string name="state_stopped">Stopped</string>
+    <string name="state_transition">Working…</string>
+    <string name="state_failed">Failed</string>
+    <string name="start_hosting">Start hosting</string>
+    <string name="stop_hosting">Stop hosting</string>
+
+    <!-- Stats -->
+    <string name="stat_requests">Requests</string>
+    <string name="stat_active">Active connections</string>
+    <string name="stat_p50">Latency p50</string>
+    <string name="stat_p95">Latency p95</string>
+    <string name="stat_max">Max latency</string>
+
+    <!-- Dashboard -->
+    <string name="default_site">Default site</string>
+    <string name="manage_sites">Manage</string>
+    <string name="no_default_site">No site imported yet. Head to Sites and import a ZIP — your site goes live in seconds.</string>
+    <string name="index_ok">index.html found</string>
+    <string name="index_missing">no index.html</string>
+    <string name="qr_title">Scan to open on this Wi-Fi</string>
+    <string name="files_unit">files</string>
+    <string name="default_badge">Default</string>
+
+    <!-- Sites -->
+    <string name="import_site">Import site</string>
+    <string name="sites_empty_title">No sites yet</string>
+    <string name="sites_empty_body">Import a ZIP exported from any AI website builder. Stratos validates it (zip-slip, symlinks, bombs, CRC) and hosts it on your phone.</string>
+    <string name="importing">Importing…</string>
+    <string name="import_working">Validating and extracting safely…</string>
+    <string name="import_rejected">Import rejected</string>
+    <string name="import_preview_title">Review import</string>
+    <string name="import_summary">%1$d files · %2$s extracted</string>
+    <string name="import_root">root: %1$s</string>
+    <string name="import_confirm">Import &amp; host</string>
+    <string name="site_name">Site name</string>
+    <string name="spa_mode">SPA mode (fallback to index.html)</string>
+    <string name="set_default">Set as default</string>
+    <string name="open_editor">Open in editor</string>
+    <string name="replace_content">Replace content…</string>
+    <string name="delete_site">Delete site</string>
+    <string name="delete_site_title">Delete this site?</string>
+    <string name="delete_site_body">“%1$s” and all of its files will be removed from the device. This cannot be undone.</string>
+
+    <!-- Editor -->
+    <string name="editor">Editor</string>
+    <string name="tab_files">Files</string>
+    <string name="tab_preview">Preview</string>
+    <string name="editor_pick_file">Pick a file from the tree</string>
+    <string name="preview_needs_hosting">Preview needs hosting to be running (it loads through the real server on loopback).</string>
+
+    <!-- Metrics -->
+    <string name="reset">Reset</string>
+    <string name="engine_live">Engine live</string>
+    <string name="engine_idle">Engine idle</string>
+    <string name="metric_rps">Requests per second</string>
+    <string name="metric_no_data">No requests recorded yet.</string>
+    <string name="metric_status_codes">Response codes</string>
+    <string name="metric_device">Device</string>
+    <string name="metric_device_src">measured on-device</string>
+    <string name="metric_memory">Memory</string>
+    <string name="metric_cpu">CPU</string>
+    <string name="metric_storage">Storage</string>
+    <string name="metric_battery_temp">Battery temp</string>
+    <string name="metric_rx">Received</string>
+    <string name="metric_tx">Sent</string>
+    <string name="metric_unavailable">Unavailable</string>
+
+    <!-- Tunnel -->
+    <string name="tunnel_needs_hosting">Start hosting first — the tunnel forwards traffic to your local server.</string>
+    <string name="tunnel_quick_title">Quick Tunnel</string>
+    <string name="tunnel_quick_body">Temporary https://*.trycloudflare.com address. No Cloudflare account needed. The URL changes every run.</string>
+    <string name="tunnel_quick_connect">Get public URL</string>
+    <string name="tunnel_named_title">Named Tunnel</string>
+    <string name="tunnel_named_body">Persistent hostname for your own domain via a Cloudflare tunnel token. The token is AES-256-GCM encrypted on this device and is never sent anywhere else.</string>
+    <string name="tunnel_named_connect">Connect named tunnel</string>
+    <string name="tunnel_connected">CONNECTED</string>
+    <string name="tunnel_connecting">CONNECTING…</string>
+    <string name="tunnel_error">ERROR</string>
+    <string name="tunnel_off">OFF</string>
+    <string name="disconnect">Disconnect</string>
+    <string name="tunnel_token_saved">token saved</string>
+    <string name="tunnel_token_missing">no token</string>
+    <string name="tunnel_token_manage">Manage token</string>
+    <string name="tunnel_token_title">Cloudflare tunnel token</string>
+    <string name="tunnel_token_help">Cloudflare Zero Trust → Networks → Tunnels → your tunnel → copy the token from “cloudflared service install eyJ…”.</string>
+    <string name="tunnel_token_field">eyJ…</string>
+    <string name="tunnel_token_present">A token is stored encrypted on this device.</string>
+    <string name="tunnel_token_clear">Remove</string>
+    <string name="tunnel_logs">Log tail (redacted)</string>
+    <string name="tunnel_logs_empty">No tunnel output yet.</string>
+
+    <!-- AI builder -->
+    <string name="ai_title">Build a site in one tap</string>
+    <string name="ai_subtitle">Describe your site; Stratos generates a complete single-file website you can host instantly. Works fully offline, or with your own AI API key.</string>
+    <string name="ai_mode_offline">Offline template</string>
+    <string name="ai_mode_api">AI API</string>
+    <string name="ai_key_needed_settings">No API key saved yet — add one in Settings, or use the offline mode.</string>
+    <string name="ai_endpoint_set">Endpoint: %1$s</string>
+    <string name="ai_site_name">Site name</string>
+    <string name="ai_tagline">Headline (hero)</string>
+    <string name="ai_about">About your business</string>
+    <string name="ai_services_hint">Services — one per line</string>
+    <string name="ai_phone">Phone</string>
+    <string name="ai_email">Email</string>
+    <string name="ai_address">Address</string>
+    <string name="ai_language">Content language</string>
+    <string name="ai_palette">Accent color</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_en">English</string>
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_system">System</string>
+    <string name="palette_blue">Blue</string>
+    <string name="palette_emerald">Emerald</string>
+    <string name="palette_violet">Violet</string>
+    <string name="palette_mono">Mono</string>
+    <string name="ai_generate">Generate site</string>
+    <string name="ai_generated_title">Your site is ready</string>
+    <string name="ai_generated_size">%1$d KB · single self-contained HTML file</string>
+    <string name="ai_save_site">Save &amp; host</string>
+    <string name="ai_failed">Generation failed</string>
+    <string name="ai_key_saved">key saved</string>
+
+    <!-- Settings -->
+    <string name="settings_server">Server</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_port_hint">1024–65535. The LAN URL updates automatically; make sure tunnel routes point to the same port.</string>
+    <string name="settings_bind">Reachability</string>
+    <string name="settings_bind_lan">Same Wi-Fi (LAN)</string>
+    <string name="settings_bind_loopback">This device only</string>
+    <string name="settings_spa">Default SPA mode for new sites</string>
+    <string name="settings_appearance">Appearance &amp; language</string>
+    <string name="settings_language">App language</string>
+    <string name="settings_theme">Theme</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="theme_system">System</string>
+    <string name="settings_ai">AI provider</string>
+    <string name="settings_ai_endpoint">API base URL</string>
+    <string name="settings_ai_endpoint_hint">OpenAI-compatible. Examples: https://api.z.ai/api/paas/v4 · https://api.openai.com/v1 · https://openrouter.ai/api/v1</string>
+    <string name="settings_ai_model">Model</string>
+    <string name="settings_ai_key_add">Add API key</string>
+    <string name="settings_ai_key_change">Change API key</string>
+    <string name="settings_ai_key_title">AI API key</string>
+    <string name="settings_ai_key_body">Stored with Android Keystore AES-256-GCM on this device only — never uploaded, never logged, never shown again.</string>
+    <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_diagnostics">Diagnostics</string>
+    <string name="diag_engine">Engine</string>
+    <string name="diag_lan">LAN address</string>
+    <string name="diag_cloudflared">cloudflared binary</string>
+    <string name="diag_found">found</string>
+    <string name="diag_missing">not installed (Quick/Named tunnel disabled)</string>
+    <string name="diag_privacy">Stratos has no accounts, no ads, no analytics and no telemetry. Everything stays on this device.</string>
+
+    <!-- Custom domain wizard -->
+    <string name="domain_wizard_title">Custom domain</string>
+    <string name="domain_step_of">Step %1$d of %2$d</string>
+    <string name="domain_card_title">Custom domain</string>
+    <string name="domain_card_body">Point your own hostname at the named tunnel — a guided 5-step wizard, from token to live HTTPS check.</string>
+    <string name="domain_card_saved">saved</string>
+    <string name="domain_card_none">not set</string>
+    <string name="domain_card_manage">Set up / manage</string>
+    <string name="domain_s1_title">Your hostname</string>
+    <string name="domain_s1_body">Type the domain or subdomain your site should appear under.</string>
+    <string name="domain_field">your-domain.com</string>
+    <string name="domain_invalid">Not a valid hostname. Use letters, digits and hyphens with at least one dot.</string>
+    <string name="domain_bare_hint">Tip: for a bare root domain, also create a www record pointing to the same target.</string>
+    <string name="domain_next">Continue</string>
+    <string name="domain_s2_title">Paste the tunnel token</string>
+    <string name="domain_token_help">Paste the same Cloudflare tunnel token from “cloudflared service install eyJ…”. The wizard reads only the public tunnel ID from it — the secret is never decoded, shown or stored here.</string>
+    <string name="domain_token_invalid">Could not read a tunnel ID from this token. Make sure you copied the full eyJ… value.</string>
+    <string name="domain_s3_title">Tunnel ID decoded</string>
+    <string name="domain_s3_body">Review the values, then create the DNS record in the next step.</string>
+    <string name="domain_tunnel_id">Tunnel ID</string>
+    <string name="domain_cname_target">CNAME target</string>
+    <string name="domain_s4_title">Create the DNS record</string>
+    <string name="domain_dns_type">Type: CNAME</string>
+    <string name="domain_dns_name">Name: @ for %1$s, or www</string>
+    <string name="domain_dns_proxy">Proxy status: Enabled (orange cloud)</string>
+    <string name="domain_dns_note">DNS changes can take a few minutes to propagate.</string>
+    <string name="domain_s5_title">Verify HTTPS</string>
+    <string name="domain_verify_body">Start hosting, connect the named tunnel from the Tunnel tab, then check that your domain serves the site.</string>
+    <string name="domain_verify_btn">Verify now</string>
+    <string name="domain_verify_checking">Checking https://…</string>
+    <string name="domain_verify_ok">Live over HTTPS</string>
+    <string name="domain_verify_fail">Not reachable yet</string>
+    <string name="domain_verify_fail_hint">Check the DNS record, the named tunnel state and that hosting is running. Propagation can take a few minutes.</string>
+    <string name="domain_save_anyway">Save anyway</string>
+    <string name="domain_saved">Domain saved — it appears on the Tunnel screen.</string>
+    <string name="domain_done">Done</string>
+
+    <!-- Notifications -->
+    <string name="notif_channel_name">Hosting</string>
+    <string name="notif_channel_desc">Keeps the web server running in the background</string>
+    <string name="notif_title_running">Stratos is hosting your site</string>
+    <string name="notif_text_running">Tap to open · visitors on your Wi-Fi can browse now</string>
+    <string name="notif_title_starting">Stratos is starting…</string>
+    <string name="notif_text_starting">Preparing the embedded server</string>
+    <string name="notif_action_stop">STOP</string>
+</resources>

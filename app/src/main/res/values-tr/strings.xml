@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Stratos</string>
+    <!-- Gezinme -->
+    <string name="nav_dashboard">Sunucu</string>
+    <string name="nav_sites">Siteler</string>
+    <string name="nav_ai">AI Yapıcı</string>
+    <string name="nav_metrics">Metrikler</string>
+    <string name="nav_tunnel">Tünel</string>
+    <string name="settings">Ayarlar</string>
+    <string name="back">Geri</string>
+    <string name="close">Kapat</string>
+    <string name="cancel">İptal</string>
+    <string name="save">Kaydet</string>
+    <string name="apply">Uygula</string>
+    <string name="on">Açık</string>
+    <string name="off">Kapalı</string>
+    <string name="copy">Kopyala</string>
+    <string name="open">Aç</string>
+    <string name="refresh">Yenile</string>
+    <string name="more">Daha fazla</string>
+    <string name="edit">Düzenle</string>
+    <string name="delete">Sil</string>
+    <string name="qr">QR</string>
+
+    <!-- Barındırma durumları -->
+    <string name="state_running">Yayında</string>
+    <string name="state_stopped">Durduruldu</string>
+    <string name="state_transition">Çalışıyor…</string>
+    <string name="state_failed">Hata</string>
+    <string name="start_hosting">Barındırmayı başlat</string>
+    <string name="stop_hosting">Barındırmayı durdur</string>
+
+    <!-- İstatistikler -->
+    <string name="stat_requests">İstekler</string>
+    <string name="stat_active">Aktif bağlantılar</string>
+    <string name="stat_p50">Gecikme p50</string>
+    <string name="stat_p95">Gecikme p95</string>
+    <string name="stat_max">En yüksek gecikme</string>
+
+    <!-- Panel -->
+    <string name="default_site">Varsayılan site</string>
+    <string name="manage_sites">Yönet</string>
+    <string name="no_default_site">Henüz site içe aktarılmadı. Siteler ekranına gidip bir ZIP içe aktarın — siteniz saniyeler içinde yayında olur.</string>
+    <string name="index_ok">index.html bulundu</string>
+    <string name="index_missing">index.html yok</string>
+    <string name="qr_title">Aynı Wi-Fi üzerinden açmak için okutun</string>
+    <string name="files_unit">dosya</string>
+    <string name="default_badge">Varsayılan</string>
+
+    <!-- Siteler -->
+    <string name="import_site">Site içe aktar</string>
+    <string name="sites_empty_title">Henüz site yok</string>
+    <string name="sites_empty_body">Herhangi bir AI site oluşturucudan indirdiğiniz ZIP\'i içe aktarın. Stratos doğrular (zip-slip, symlink, bomba, CRC) ve telefonunuzda barındırır.</string>
+    <string name="importing">İçe aktarılıyor…</string>
+    <string name="import_working">Güvenlik doğrulaması ve güvenli çıkarma…</string>
+    <string name="import_rejected">İçe aktarma reddedildi</string>
+    <string name="import_preview_title">İçe aktarmayı gözden geçirin</string>
+    <string name="import_summary">%1$d dosya · %2$s çıkarıldı</string>
+    <string name="import_root">kök: %1$s</string>
+    <string name="import_confirm">İçe aktar &amp; barındır</string>
+    <string name="site_name">Site adı</string>
+    <string name="spa_mode">SPA modu (index.html\'e dön)</string>
+    <string name="set_default">Varsayılan yap</string>
+    <string name="open_editor">Düzenleyicide aç</string>
+    <string name="replace_content">İçeriği değiştir…</string>
+    <string name="delete_site">Siteyi sil</string>
+    <string name="delete_site_title">Bu site silinsin mi?</string>
+    <string name="delete_site_body">“%1$s” ve tüm dosyaları cihazdan kaldırılacak. Bu işlem geri alınamaz.</string>
+
+    <!-- Düzenleyici -->
+    <string name="editor">Düzenleyici</string>
+    <string name="tab_files">Dosyalar</string>
+    <string name="tab_preview">Önizleme</string>
+    <string name="editor_pick_file">Ağaçtan bir dosya seçin</string>
+    <string name="preview_needs_hosting">Önizleme için barındırmanın çalışması gerekir (gerçek sunucu üzerinden loopback ile yüklenir).</string>
+
+    <!-- Metrikler -->
+    <string name="reset">Sıfırla</string>
+    <string name="engine_live">Motor çalışıyor</string>
+    <string name="engine_idle">Motor boşta</string>
+    <string name="metric_rps">Saniyedeki istek</string>
+    <string name="metric_no_data">Henüz istek kaydedilmedi.</string>
+    <string name="metric_status_codes">Yanıt kodları</string>
+    <string name="metric_device">Cihaz</string>
+    <string name="metric_device_src">cihazda ölçüldü</string>
+    <string name="metric_memory">Bellek</string>
+    <string name="metric_cpu">CPU</string>
+    <string name="metric_storage">Depolama</string>
+    <string name="metric_battery_temp">Pil sıcaklığı</string>
+    <string name="metric_rx">Alınan</string>
+    <string name="metric_tx">Gönderilen</string>
+    <string name="metric_unavailable">Kullanılamıyor</string>
+
+    <!-- Tünel -->
+    <string name="tunnel_needs_hosting">Önce barındırmayı başlatın — tünel trafiği yerel sunucunuza iletir.</string>
+    <string name="tunnel_quick_title">Hızlı Tünel</string>
+    <string name="tunnel_quick_body">Geçici https://*.trycloudflare.com adresi. Cloudflare hesabı gerekmez. Adres her çalıştırmada değişir.</string>
+    <string name="tunnel_quick_connect">Herkese açık bağlantı al</string>
+    <string name="tunnel_named_title">Adlandırılmış Tünel</string>
+    <string name="tunnel_named_body">Cloudflare tünel token\'ı ile kalıcı alan adı. Token bu cihazda AES-256-GCM ile şifreli saklanır ve hiçbir yere gönderilmez.</string>
+    <string name="tunnel_named_connect">Adlandırılmış tüneli bağla</string>
+    <string name="tunnel_connected">BAĞLI</string>
+    <string name="tunnel_connecting">BAĞLANIYOR…</string>
+    <string name="tunnel_error">HATA</string>
+    <string name="tunnel_off">KAPALI</string>
+    <string name="disconnect">Bağlantıyı kes</string>
+    <string name="tunnel_token_saved">token kayıtlı</string>
+    <string name="tunnel_token_missing">token yok</string>
+    <string name="tunnel_token_manage">Token yönetimi</string>
+    <string name="tunnel_token_title">Cloudflare tünel token\'ı</string>
+    <string name="tunnel_token_help">Cloudflare Zero Trust → Networks → Tunnels → tüneliniz → “cloudflared service install eyJ…” komutundan token\'ı kopyalayın.</string>
+    <string name="tunnel_token_field">eyJ…</string>
+    <string name="tunnel_token_present">Bu cihazda şifreli bir token saklı.</string>
+    <string name="tunnel_token_clear">Kaldır</string>
+    <string name="tunnel_logs">Günlük kuyruğu (sansürlü)</string>
+    <string name="tunnel_logs_empty">Henüz tünel çıktısı yok.</string>
+
+    <!-- AI yapıcı -->
+    <string name="ai_title">Tek dokunuşla site oluştur</string>
+    <string name="ai_subtitle">Sitenizi tanımlayın; Stratos anında barındırabileceğiniz tek dosyalık eksiksiz bir site üretir. Tamamen çevrimdışı veya kendi AI API anahtarınızla çalışır.</string>
+    <string name="ai_mode_offline">Çevrimdışı şablon</string>
+    <string name="ai_mode_api">AI API</string>
+    <string name="ai_key_needed_settings">Henüz API anahtarı yok — Ayarlar\'dan ekleyin veya şablon modunu kullanın.</string>
+    <string name="ai_endpoint_set">Uç nokta: %1$s</string>
+    <string name="ai_site_name">Site adı</string>
+    <string name="ai_tagline">Başlık (hero)</string>
+    <string name="ai_about">İşletmeniz hakkında</string>
+    <string name="ai_services_hint">Hizmetler — satır başına bir tane</string>
+    <string name="ai_phone">Telefon</string>
+    <string name="ai_email">E-posta</string>
+    <string name="ai_address">Adres</string>
+    <string name="ai_language">İçerik dili</string>
+    <string name="ai_palette">Vurgu rengi</string>
+    <string name="lang_ar">العربية</string>
+    <string name="lang_en">English</string>
+    <string name="lang_tr">Türkçe</string>
+    <string name="lang_system">Sistem</string>
+    <string name="palette_blue">Mavi</string>
+    <string name="palette_emerald">Zümrüt</string>
+    <string name="palette_violet">Menekşe</string>
+    <string name="palette_mono">Tek renk</string>
+    <string name="ai_generate">Siteyi oluştur</string>
+    <string name="ai_generated_title">Siteniz hazır</string>
+    <string name="ai_generated_size">%1$d KB · tek parça kendi kendine yeten HTML</string>
+    <string name="ai_save_site">Kaydet &amp; barındır</string>
+    <string name="ai_failed">Oluşturma başarısız</string>
+    <string name="ai_key_saved">anahtar kayıtlı</string>
+
+    <!-- Ayarlar -->
+    <string name="settings_server">Sunucu</string>
+    <string name="settings_port">Port</string>
+    <string name="settings_port_hint">1024–65535. LAN adresi otomatik güncellenir; tünel rotalarının aynı porta baktığından emin olun.</string>
+    <string name="settings_bind">Erişim kapsamı</string>
+    <string name="settings_bind_lan">Aynı Wi-Fi (LAN)</string>
+    <string name="settings_bind_loopback">Yalnızca bu cihaz</string>
+    <string name="settings_spa">Yeni siteler için varsayılan SPA modu</string>
+    <string name="settings_appearance">Görünüm ve dil</string>
+    <string name="settings_language">Uygulama dili</string>
+    <string name="settings_theme">Tema</string>
+    <string name="theme_light">Açık</string>
+    <string name="theme_dark">Koyu</string>
+    <string name="theme_system">Sistem</string>
+    <string name="settings_ai">AI sağlayıcısı</string>
+    <string name="settings_ai_endpoint">API taban URL\'si</string>
+    <string name="settings_ai_endpoint_hint">OpenAI uyumlu. Örnekler: https://api.z.ai/api/paas/v4 · https://api.openai.com/v1 · https://openrouter.ai/api/v1</string>
+    <string name="settings_ai_model">Model</string>
+    <string name="settings_ai_key_add">API anahtarı ekle</string>
+    <string name="settings_ai_key_change">API anahtarını değiştir</string>
+    <string name="settings_ai_key_title">AI API anahtarı</string>
+    <string name="settings_ai_key_body">Yalnızca bu cihazda Android Keystore AES-256-GCM ile saklanır — yüklenmez, günlüğe yazılmaz, tekrar gösterilmez.</string>
+    <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_diagnostics">Teşhis</string>
+    <string name="diag_engine">Motor</string>
+    <string name="diag_lan">LAN adresi</string>
+    <string name="diag_cloudflared">cloudflared ikili dosyası</string>
+    <string name="diag_found">bulundu</string>
+    <string name="diag_missing">yüklü değil (Hızlı/Adlandırılmış tünel kapalı)</string>
+    <string name="diag_privacy">Stratos hesapsız, reklamsız, analitik ve telemetrisizdir. Her şey bu cihazda kalır.</string>
+
+    <!-- Özel alan adı sihirbazı -->
+    <string name="domain_wizard_title">Özel alan adı</string>
+    <string name="domain_step_of">Adım %1$d/%2$d</string>
+    <string name="domain_card_title">Özel alan adı</string>
+    <string name="domain_card_body">Kendi alan adınızı adlandırılmış tünele yönlendirin — tokenden canlı HTTPS kontrolüne 5 adımlı sihirbaz.</string>
+    <string name="domain_card_saved">kayıtlı</string>
+    <string name="domain_card_none">ayarlanmadı</string>
+    <string name="domain_card_manage">Kur / yönet</string>
+    <string name="domain_s1_title">Alan adınız</string>
+    <string name="domain_s1_body">Sitenizin görünmesini istediğiniz alan adını veya alt alan adını yazın.</string>
+    <string name="domain_field">alan-adiniz.com</string>
+    <string name="domain_invalid">Geçersiz ana bilgisayar adı. Harf, rakam ve tire ile en az bir nokta kullanın.</string>
+    <string name="domain_bare_hint">İpucu: kök alan adı için aynı hedefe işaret eden bir www kaydı da oluşturun.</string>
+    <string name="domain_next">Devam</string>
+    <string name="domain_s2_title">Tünel token\'ını yapıştırın</string>
+    <string name="domain_token_help">“cloudflared service install eyJ…” komutundaki Cloudflare tünel token\'ını yapıştırın. Sihirbaz yalnızca genel tünel kimliğini okur — gizli anahtar burada çözülmez, gösterilmez veya saklanmaz.</string>
+    <string name="domain_token_invalid">Bu tokenden tünel kimliği okunamadı. eyJ… değerini tam kopyaladığınızdan emin olun.</string>
+    <string name="domain_s3_title">Tünel kimliği çözüldü</string>
+    <string name="domain_s3_body">Değerleri gözden geçirin, ardından sonraki adımda DNS kaydını oluşturun.</string>
+    <string name="domain_tunnel_id">Tünel kimliği</string>
+    <string name="domain_cname_target">CNAME hedefi</string>
+    <string name="domain_s4_title">DNS kaydını oluştur</string>
+    <string name="domain_dns_type">Tür: CNAME</string>
+    <string name="domain_dns_name">Ad: %1$s için @, veya www</string>
+    <string name="domain_dns_proxy">Proxy durumu: Etkin (turuncu bulut)</string>
+    <string name="domain_dns_note">DNS değişikliklerinin yayılması birkaç dakika sürebilir.</string>
+    <string name="domain_s5_title">HTTPS doğrulama</string>
+    <string name="domain_verify_body">Barındırmayı başlatın, Tünel sekmesinden adlandırılmış tüneli bağlayın, sonra alan adınızın siteyi sunduğunu doğrulayın.</string>
+    <string name="domain_verify_btn">Şimdi doğrula</string>
+    <string name="domain_verify_checking">Kontrol ediliyor https://…</string>
+    <string name="domain_verify_ok">HTTPS üzerinden canlı</string>
+    <string name="domain_verify_fail">Henüz erişilemiyor</string>
+    <string name="domain_verify_fail_hint">DNS kaydını, adlandırılmış tünelin durumunu ve barındırmanın çalıştığını kontrol edin. Yayılma birkaç dakika sürebilir.</string>
+    <string name="domain_save_anyway">Yine de kaydet</string>
+    <string name="domain_saved">Alan adı kaydedildi — Tünel ekranında görünür.</string>
+    <string name="domain_done">Bitti</string>
+
+    <!-- Bildirimler -->
+    <string name="notif_channel_name">Barındırma</string>
+    <string name="notif_channel_desc">Web sunucusunu arka planda çalışır tutar</string>
+    <string name="notif_title_running">Stratos sitenizi barındırıyor</string>
+    <string name="notif_text_running">Açmak için dokunun · Wi-Fi\'nızdaki ziyaretçiler gezinebilir</string>
+    <string name="notif_title_starting">Stratos başlıyor…</string>
+    <string name="notif_text_starting">Gömülü sunucu hazırlanıyor</string>
+    <string name="notif_action_stop">DURDUR</string>
+</resources>
