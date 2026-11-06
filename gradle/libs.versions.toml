@@ -16,6 +16,7 @@ okhttp = "4.12.0"
 nanohttpd = "2.3.1"
 soraEditor = "0.23.4"
 zxing = "3.5.3"
+desugar = "2.1.5"
 junit = "4.13.2"
 
 [libraries]
@@ -45,6 +46,7 @@ nanohttpd = { group = "org.nanohttpd", name = "nanohttpd", version.ref = "nanoht
 sora-editor = { group = "io.github.Rosemoe.sora-editor", name = "editor", version.ref = "soraEditor" }
 sora-editor-language = { group = "io.github.Rosemoe.sora-editor", name = "language-textmate", version.ref = "soraEditor" }
 zxing-core = { group = "com.google.zxing", name = "core", version.ref = "zxing" }
+android-tools-desugar = { group = "com.android.tools", name = "desugar_jdk_libs", version.ref = "desugar" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutines" }
 

@@ -34,6 +34,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // Required by sora-editor language-textmate (java.time & friends on minSdk 26).
+        isCoreLibraryDesugaringEnabled = true
     }
     kotlinOptions {
         jvmTarget = "17"
@@ -84,6 +86,7 @@ dependencies {
     implementation(libs.sora.editor)
     implementation(libs.sora.editor.language)
     implementation(libs.zxing.core)
+    coreLibraryDesugaring(libs.android.tools.desugar)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
