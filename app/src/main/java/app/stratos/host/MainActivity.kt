@@ -87,14 +87,19 @@ class MainActivity : AppCompatActivity() {
      */
     private fun handleIncomingZip(intent: Intent?) {
         if (intent == null) return
-        val uri: Uri? = when (intent.action) {
+        val raw: Uri? = when (intent.action) {
             Intent.ACTION_SEND ->
                 @Suppress("DEPRECATION")
                 intent.getParcelableExtra(Intent.EXTRA_STREAM)
             Intent.ACTION_VIEW -> intent.data
             else -> null
         } ?: return
+        // Non-null parameter (not a smart cast) so the coroutine lambdas below
+        // see a guaranteed-immutable, non-nullable Uri.
+        stageIncoming(raw)
+    }
 
+    private fun stageIncoming(uri: Uri) {
         lifecycleScope.launch {
             val staged = withContext(Dispatchers.IO) {
                 runCatching {
