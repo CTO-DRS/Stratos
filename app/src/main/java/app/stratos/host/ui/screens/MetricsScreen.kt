@@ -2,6 +2,7 @@ package app.stratos.host.ui.screens
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
 import android.os.BatteryManager
 import android.os.Build
 import android.os.StatFs
@@ -123,8 +124,10 @@ class MetricsViewModel : ViewModel() {
         val stTotalGb = stat.totalBytes / (1024.0 * 1024 * 1024)
         val stUsedGb = (stat.totalBytes - stat.availableBytes) / (1024.0 * 1024 * 1024)
 
-        val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
-        val temp = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE)
+        // Battery temperature: EXTRA_TEMPERATURE (tenths of °C) from the sticky
+        // battery-changed broadcast — BatteryManager has no *_PROPERTY_TEMPERATURE.
+        val temp = context.registerReceiver(null, android.content.IntentFilter(Intent.ACTION_BATTERY_CHANGED))
+            ?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1)
             ?.takeIf { it > 0 }?.toDouble()?.div(10.0) ?: -1.0
 
         val rx = android.net.TrafficStats.getTotalRxBytes().takeIf { it > 0 } ?: -1L

@@ -56,6 +56,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import app.stratos.host.R
 import app.stratos.host.StratosApp
@@ -341,7 +342,7 @@ private fun CodeEditorView(
     val textMateReady = remember { SyntaxSupport.init(context) }
     val editor = remember {
         CodeEditor(context).apply {
-            lineNumberEnabled = true
+            setLineNumberEnabled(true)
             isWordwrap = false
             typefaceText = android.graphics.Typeface.MONOSPACE
             setTextSize(13f)
@@ -393,7 +394,6 @@ private fun applyEditorScheme(editor: CodeEditor, dark: Boolean) {
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_CURRENT, 0xFF5EA2FF.toInt())
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.TEXT_NORMAL, 0xFFF2F5FF.toInt())
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.CURRENT_LINE, 0xFF131828.toInt())
-        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.SELECTION, 0x3D3D7BFF.toInt())
     } else {
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.WHOLE_BACKGROUND, 0xFFFDFFFF.toInt())
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_BACKGROUND, 0xFFFDFFFF.toInt())
@@ -401,7 +401,6 @@ private fun applyEditorScheme(editor: CodeEditor, dark: Boolean) {
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_CURRENT, 0xFF0B6BFF.toInt())
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.TEXT_NORMAL, 0xFF0B1020.toInt())
         s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.CURRENT_LINE, 0xFFEEF2FC.toInt())
-        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.SELECTION, 0x333D7BFF.toInt())
     }
     editor.setColorScheme(s)
 }
