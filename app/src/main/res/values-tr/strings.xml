@@ -225,4 +225,48 @@
     <string name="notif_title_starting">Stratos başlıyor…</string>
     <string name="notif_text_starting">Gömülü sunucu hazırlanıyor</string>
     <string name="notif_action_stop">DURDUR</string>
+
+    <!-- Açılış deneyimi: açılış ekranı, karşılama, uygulama turu, izinler -->
+    <string name="splash_tagline">Cebinizden doğrudan hosting</string>
+    <string name="welcome_greeting">مرحبًا · Hello · Merhaba</string>
+    <string name="welcome_title">Stratos\'a hoş geldiniz</string>
+    <string name="welcome_body">Telefonunuzda yaşayan gerçek bir web sunucusu — bir siteyi içe aktarın, yapay zekâ ile oluşturun ve saniyeler içinde dünyaya yayınlayın.</string>
+    <string name="cta_get_started">Başlayalım</string>
+    <string name="onboarding_skip">Atla</string>
+    <string name="tour_next">İleri</string>
+    <string name="tour_done">Neredeyse hazır</string>
+
+    <string name="tour1_title">Telefonunuz sunucudur</string>
+    <string name="tour1_body">Herhangi bir site ZIP\'ini içe aktarın; Stratos gerçek bir motorla sunar — saniyeler içinde Wi-Fi\'nızda canlı.</string>
+    <string name="tour1_p1">Gerçek sunum motoru ve cihaz üzerinde dürüst metrikler</string>
+    <string name="tour1_p2">Aynı anda birden fazla site barındırma</string>
+    <string name="tour1_p3">Sertleştirilmiş içe aktarma — zip-slip, sembolik bağlantı ve arşiv bombası koruması</string>
+
+    <string name="tour2_title">Yapay zekâ ile oluştur, editörde geliştir</string>
+    <string name="tour2_body">İstediğiniz siteyi tarif edin, tek dokunuşla eksiksiz bir sayfa alın — ardından yerleşik editörde her ayrıntıyı ince ayarlayın.</string>
+    <string name="tour2_p1">Tamamen çevrimdışı çalışır veya kendi yapay zekâ anahtarınızla</string>
+    <string name="tour2_p2">HTML, CSS, JS, JSON, YAML ve daha fazlası için sözdizimi vurgulama</string>
+    <string name="tour2_p3">Gerçek motor tarafından sunulan canlı önizleme</string>
+
+    <string name="tour3_title">Dünyayla paylaşın</string>
+    <string name="tour3_body">Wi-Fi\'nız için QR kodu, tüm internet için Cloudflare tüneli ve kendi alan adınız için rehberli sihirbaz.</string>
+    <string name="tour3_p1">Hızlı Tünel — tek dokunuş, sıfır kurulum</string>
+    <string name="tour3_p2">5 adımlı sihirbazla özel alan adları</string>
+    <string name="tour3_p3">Tünel tokenları Keystore kasasında mühürlü</string>
+
+    <string name="perm_title">İzin verilecek birkaç şey</string>
+    <string name="perm_subtitle">Stratos yalnızca sunucunun gerçekten ihtiyaç duyduğu şeyleri ister. Her iki durumda da devam edebilirsiniz.</string>
+    <string name="perm_notif_title">Bildirimler</string>
+    <string name="perm_notif_body">Barındırma durumunu ve DURDUR düğmesini gösterir — Android 13 ve üzerinde arka planda barındırma için gereklidir.</string>
+    <string name="perm_files_title">Dosyalar (Android 12 ve öncesi)</string>
+    <string name="perm_files_body">Yalnızca İndirilenler\'den veya diğer uygulamalardan seçtiğiniz site ZIP\'lerini açmak için kullanılır. Dosyalarınız asla yüklenmez.</string>
+    <string name="perm_battery_title">Kısıtsız arka plan</string>
+    <string name="perm_battery_body">Diğer uygulamalar çalışırken Android\'in web sunucunuzu duraklatmasını engeller. Güvenilir barındırma için önerilir.</string>
+    <string name="perm_allowed">İzin verildi</string>
+    <string name="perm_not_yet">Henüz değil</string>
+    <string name="perm_allow">İzin ver</string>
+    <string name="perm_open_settings">Ayarları aç</string>
+    <string name="perm_finish">Stratos\'u kullanmaya başla</string>
+    <string name="perm_later">Daha sonra</string>
+    <string name="settings_replay_intro">Tanıtımı yeniden oynat</string>
 </resources>

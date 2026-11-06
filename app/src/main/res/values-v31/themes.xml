@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Android 12+: align the system splash with the Stratos brand so the
+         transition into the animated Compose splash is seamless. -->
+    <style name="Theme.Stratos" parent="Theme.AppCompat.DayNight.NoActionBar">
+        <item name="android:windowBackground">@color/brand_bg</item>
+        <item name="android:statusBarColor">@color/brand_bg</item>
+        <item name="android:navigationBarColor">@color/brand_bg</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowSplashScreenBackground">@color/brand_bg</item>
+    </style>
+</resources>

@@ -225,4 +225,48 @@
     <string name="notif_title_starting">ستراتوس يبدأ التشغيل…</string>
     <string name="notif_text_starting">تهيئة الخادم المدمج</string>
     <string name="notif_action_stop">إيقاف</string>
+
+    <!-- تجربة الإطلاق: شاشة البداية، الترحيب، شرح التطبيق، الأذونات -->
+    <string name="splash_tagline">استضافة مباشرة من جيبك</string>
+    <string name="welcome_greeting">مرحبًا · Hello · Merhaba</string>
+    <string name="welcome_title">مرحبًا بك في ستراتوس</string>
+    <string name="welcome_body">خادم ويب حقيقي يعمل على هاتفك — استورد موقعًا، أو أنشئه بالذكاء الاصطناعي، وانشره للعالم خلال ثوانٍ.</string>
+    <string name="cta_get_started">لنبدأ</string>
+    <string name="onboarding_skip">تخطٍّ</string>
+    <string name="tour_next">التالي</string>
+    <string name="tour_done">بقي القليل</string>
+
+    <string name="tour1_title">هاتفك هو الخادم</string>
+    <string name="tour1_body">استورد أي موقع بصيغة ZIP ويقدّمه ستراتوس بمحرك حقيقي — يعمل مباشرة على شبكة Wi-Fi الخاصة بك خلال ثوانٍ.</string>
+    <string name="tour1_p1">محرك تقديم حقيقي مع مقاييس دقيقة على الجهاز</string>
+    <string name="tour1_p2">استضافة عدة مواقع في الوقت نفسه</string>
+    <string name="tour1_p3">استيراد محصّن ضد zip-slip والروابط الرمزية وقنابل الأرشيف</string>
+
+    <string name="tour2_title">أنشئ بالذكاء الاصطناعي وحسّن في المحرر</string>
+    <string name="tour2_body">صِف الموقع الذي تريده واحصل على صفحة كاملة بضغطة واحدة — ثم اضبط كل تفصيلة في المحرر المدمج.</string>
+    <string name="tour2_p1">يعمل دون اتصال بالكامل، أو بمفتاح ذكاء اصطناعي خاص بك</string>
+    <string name="tour2_p2">تلوين نحوي لـ HTML وCSS وJS وJSON وYAML والمزيد</string>
+    <string name="tour2_p3">معاينة حية يقدّمها المحرك الحقيقي</string>
+
+    <string name="tour3_title">شاركه مع العالم</string>
+    <string name="tour3_body">رمز QR لشبكتك المحلية، ونفق Cloudflare للإنترنت كله، ومعالج موجّه لنطاقك الخاص.</string>
+    <string name="tour3_p1">النفق السريع — ضغطة واحدة دون أي إعداد</string>
+    <string name="tour3_p2">نطاقات مخصصة عبر المعالج المكوّن من 5 خطوات</string>
+    <string name="tour3_p3">توكنات الأنفاق محفوظة في خزنة Keystore</string>
+
+    <string name="perm_title">أذونات قليلة مطلوبة</string>
+    <string name="perm_subtitle">لا يطلب ستراتوس إلا ما يحتاجه الخادم فعلًا. يمكنك المتابعة في الحالتين.</string>
+    <string name="perm_notif_title">الإشعارات</string>
+    <string name="perm_notif_body">تُظهر حالة الاستضافة وزر الإيقاف — وهي مطلوبة للاستضافة في الخلفية على أندرويد 13 وما أحدث.</string>
+    <string name="perm_files_title">الملفات (أندرويد 12 وما أقدم)</string>
+    <string name="perm_files_body">تُستخدم فقط لفتح ملفات ZIP التي تختارها من التنزيلات أو تطبيقات أخرى. لا تُرفع ملفاتك أبدًا.</string>
+    <string name="perm_battery_title">خلفية بلا قيود</string>
+    <string name="perm_battery_body">تمنع أندرويد من إيقاف خادم الويب أثناء استخدام تطبيقات أخرى. يُنصح بها لاستضافة موثوقة.</string>
+    <string name="perm_allowed">مسموح</string>
+    <string name="perm_not_yet">ليس بعد</string>
+    <string name="perm_allow">السماح</string>
+    <string name="perm_open_settings">فتح الإعدادات</string>
+    <string name="perm_finish">ابدأ استخدام ستراتوس</string>
+    <string name="perm_later">لاحقًا</string>
+    <string name="settings_replay_intro">إعادة عرض المقدمة</string>
 </resources>

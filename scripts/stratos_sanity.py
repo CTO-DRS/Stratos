@@ -120,6 +120,36 @@ for feature, frag in [
                for p in list(ROOT.glob("app/src/main/**/*.kt")) + [ROOT / "app/src/main/AndroidManifest.xml"])
     check(hits, f"feature present: {feature}", f"feature missing: {feature}")
 
+# --------------------------------------------------- launch experience ----
+section("Launch experience (splash / onboarding / permissions)")
+main_activity = (kt_main / "MainActivity.kt").read_text(encoding="utf-8")
+check("StratosLaunchGate(" in main_activity,
+      "MainActivity uses StratosLaunchGate", "MainActivity missing launch gate")
+onboarding = kt_main / "ui/screens/OnboardingScreen.kt"
+check(onboarding.exists(), "OnboardingScreen.kt exists", "OnboardingScreen.kt missing")
+if onboarding.exists():
+    ob = onboarding.read_text(encoding="utf-8")
+    for frag, label in [("SplashScreen", "splash screen"),
+                        ("WelcomeScreen", "welcome screen"),
+                        ("TourPager", "app-tour pager"),
+                        ("PermissionsScreen", "permissions screen"),
+                        ("POST_NOTIFICATIONS", "notification permission request"),
+                        ("ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS", "battery exemption request")]:
+        check(frag in ob, f"onboarding contains {label}", f"onboarding missing {label}")
+check("onboarding_done" in (kt_main / "data/SettingsStore.kt").read_text(encoding="utf-8"),
+      "SettingsStore persists onboarding_done", "onboarding_done flag missing in SettingsStore")
+check("setOnboardingDone" in (kt_main / "ui/screens/SettingsScreen.kt").read_text(encoding="utf-8"),
+      "Settings offers replay-introduction", "replay-introduction row missing in Settings")
+check('android.permission.READ_EXTERNAL_STORAGE' in manifest and 'maxSdkVersion="32"' in manifest,
+      "legacy storage permission capped at SDK 32", "READ_EXTERNAL_STORAGE maxSdk missing/wrong")
+check("android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" in manifest,
+      "battery-optimization permission declared", "battery-optimization permission missing")
+check((ROOT / "app/src/main/res/values-v31/themes.xml").exists()
+      and (ROOT / "app/src/main/res/values-night-v31/themes.xml").exists(),
+      "Android 12+ splash themes present (light + night)", "values-v31 splash themes missing")
+for k in ("splash_tagline", "welcome_title", "cta_get_started", "perm_finish", "settings_replay_intro"):
+    check(k in base, f"launch string {k} present in en", f"launch string {k} missing in en")
+
 # -------------------------------------------------------------- workflow ----
 section("CI workflow")
 wf = ROOT / ".github/workflows/build.yml"

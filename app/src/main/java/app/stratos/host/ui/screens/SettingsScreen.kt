@@ -91,6 +91,8 @@ class SettingsViewModel : ViewModel() {
         else graph.vault.put("ai_api_key", key.toCharArray())
     }
 
+    fun replayIntro() = save { it.setOnboardingDone(false) }
+
     fun reloadIfRunning() = viewModelScope.launch {
         graph.controller.reloadSites()
     }
@@ -290,6 +292,9 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                    OutlinedButton(onClick = { vm.replayIntro() }) {
+                        Text(stringResource(R.string.settings_replay_intro))
+                    }
                 }
             }
             Spacer(Modifier.height(10.dp))

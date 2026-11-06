@@ -50,6 +50,7 @@
 | 🎨 **واجهة Stratos 2035** | زجاج شفاف فوق شفق قطبي حيّ، رصيف عائم متوهّج، وأزرار بطاقة طاقة متدرّجة — ثيم فاتح + داكن تلقائيًا |
 | 🔐 **خصوصية مطلقة** | لا حسابات، لا إعلانات، لا تحليلات، لا تتبع. التوكنات مشفّرة بـ Keystore AES-256-GCM والسجلات معتّمة |
 | ⛓️ **نفق Cloudflare** | نفق سريع برابط مؤقت `*.trycloudflare.com` بلا حساب، أو نفق مسمّى باسم نطاقك + **معالج نطاق مخصص** من 5 خطوات (فك معرّف النفق العام فقط → تعليمات CNAME → تحقق HTTPS فعلي) |
+| 🎬 **تجربة إطلاق** | شاشة بداية متحركة بحلقة طاقة مدارية + شاشة ترحيب ثلاثية اللغات + جولة تعريفية بالتطبيق من 3 صفحات + شاشة أذونات تشرح «لماذا» قبل الطلب (إشعارات · ملفات الأندرويد القديم · خلفية بلا قيود) مع حالة حية وإمكانية «إعادة عرض المقدمة» من الإعدادات |
 
 ### المعمارية باختصار
 
@@ -157,6 +158,7 @@ Stratos answers: *"I built a site with an AI tool — how do I get it online fro
 - **AI site builder (the killer feature)** — describe your project and Stratos generates a complete single-file site: fully **offline** via a smart template engine, or through any OpenAI-compatible API (Z.ai GLM / OpenAI / OpenRouter) with your key, AES-256-GCM encrypted on device.
 - **Built-in code editor** — file tree + sora-editor + **TextMate syntax highlighting** (HTML/CSS/JS/JSON/MD/YAML/XML, official vscode/Red Hat grammars) synced with the dark theme + **persistent text-size and word-wrap controls** + live preview through the real server on loopback.
 - **Stratos 2035 interface** — translucent glass over a living aurora backdrop, floating glowing dock, energy-sweep gradient CTAs; light + automatic dark.
+- **Launch experience** — animated splash (orbital energy ring + version chip), trilingual welcome, a 3-page app tour, and a consent-first permissions screen that explains *why* before asking (notifications · legacy files · unrestricted background) with live status and a "Replay introduction" option in Settings.
 - **Trilingual** — Arabic (full RTL), English, Turkish with in-app switching.
 - **Cloudflare Tunnel** — Quick tunnel (temporary `*.trycloudflare.com`, no account) or Named tunnel for your own domain, with a **guided 5-step custom-domain wizard** (decodes only the public tunnel ID → CNAME instructions → live HTTPS verification).
 
@@ -207,6 +209,7 @@ Stratos şunu çözer: *"AI aracıyla bir site kurdum — telefonumdan nasıl ya
 - **Dahili kod düzenleyici** — dosya ağacı + sora-editor + **TextMate sözdizimi renklendirme** (HTML/CSS/JS/JSON/MD/YAML/XML) + kalıcı yazı-boyutu ve satır-kaydırma denetimleri + loopback üzerinden canlı önizleme.
 - **Üç dil** — Arapça (tam RTL), İngilizce, Türkçe; uygulama içi geçiş.
 - **Stratos 2035 arayüzü** — canlı aurora üzerinde yarı saydam cam, yüzen ışıklı dock, enerji geçişli gradient düğmeler; açık + otomatik koyu tema.
+- **Açılış deneyimi** — animasyonlu açılış ekranı (yörünge enerji halkası + sürüm rozeti), üç dilli karşılama, 3 sayfalık uygulama turu ve izinleri istemeden önce *neden*i açıklayan ekran (bildirimler · eski dosyalar · kısıtsız arka plan); canlı durum ve Ayarlar'da "Tanıtımı yeniden oynat".
 - **Cloudflare Tüneli** — Hızlı tünel (hesapsız) veya kendi alan adınız için adlandırılmış tünel + **5 adımlı özel alan adı sihirbazı** (yalnızca genel tünel kimliği çözülür → CNAME talimatları → canlı HTTPS doğrulaması).
 
 ### Kurulum

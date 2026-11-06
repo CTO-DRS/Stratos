@@ -23,7 +23,8 @@ data class Settings(
     val aiAutoTunnel: Boolean = false,
     val customDomain: String = "",      // empty = none configured
     val editorScale: Int = 100,          // editor text size, percent (60–200)
-    val editorWrap: Boolean = false      // soft word-wrap in the code editor
+    val editorWrap: Boolean = false,     // soft word-wrap in the code editor
+    val onboardingDone: Boolean = false  // splash/welcome/permissions tour finished
 )
 
 class SettingsStore(private val context: Context) {
@@ -40,6 +41,7 @@ class SettingsStore(private val context: Context) {
         val CUSTOM_DOMAIN = stringPreferencesKey("custom_domain")
         val EDITOR_SCALE = intPreferencesKey("editor_scale")
         val EDITOR_WRAP = booleanPreferencesKey("editor_wrap")
+        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
     }
 
     val settings: Flow<Settings> = context.dataStore.data.map { p ->
@@ -54,7 +56,8 @@ class SettingsStore(private val context: Context) {
             aiAutoTunnel = p[K.AI_TUNNEL] ?: false,
             customDomain = p[K.CUSTOM_DOMAIN] ?: "",
             editorScale = (p[K.EDITOR_SCALE] ?: 100).coerceIn(60, 200),
-            editorWrap = p[K.EDITOR_WRAP] ?: false
+            editorWrap = p[K.EDITOR_WRAP] ?: false,
+            onboardingDone = p[K.ONBOARDING_DONE] ?: false
         )
     }
 
@@ -69,4 +72,5 @@ class SettingsStore(private val context: Context) {
     suspend fun setCustomDomain(v: String) = context.dataStore.edit { it[K.CUSTOM_DOMAIN] = v.trim() }
     suspend fun setEditorScale(v: Int) = context.dataStore.edit { it[K.EDITOR_SCALE] = v.coerceIn(60, 200) }
     suspend fun setEditorWrap(v: Boolean) = context.dataStore.edit { it[K.EDITOR_WRAP] = v }
+    suspend fun setOnboardingDone(v: Boolean) = context.dataStore.edit { it[K.ONBOARDING_DONE] = v }
 }

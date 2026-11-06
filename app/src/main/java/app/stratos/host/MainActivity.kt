@@ -18,6 +18,7 @@ import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.lifecycleScope
 import app.stratos.host.data.Settings
 import app.stratos.host.ui.StratosAppUi
+import app.stratos.host.ui.screens.StratosLaunchGate
 import app.stratos.host.ui.theme.StratosTheme
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
@@ -54,21 +55,34 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        requestNotificationPermissionIfNeeded()
         handleIncomingZip(intent)
 
         setContent {
-            // The persisted theme choice (light | dark | system) now truly
-            // drives StratosTheme; default "system" follows the OS.
+            // The persisted theme choice (light | dark | system) drives
+            // StratosTheme; null = DataStore still resolving → splash shows.
             val settings by StratosApp.instance.graph.settings.settings
-                .collectAsState(initial = Settings())
-            val dark = when (settings.theme) {
+                .collectAsState(initial = null as Settings?)
+            val dark = when (settings?.theme) {
                 "dark" -> true
                 "light" -> false
                 else -> isSystemInDarkTheme()
             }
             StratosTheme(darkTheme = dark) {
-                StratosAppUi()
+                StratosLaunchGate(
+                    onboardingDone = settings?.onboardingDone,
+                    onFinishOnboarding = {
+                        lifecycleScope.launch {
+                            StratosApp.instance.graph.settings.setOnboardingDone(true)
+                        }
+                    },
+                    app = {
+                        // Returning users: a soft one-shot ask if the hosting
+                        // notification permission is still missing (first launch
+                        // asks inside the onboarding permission screen instead).
+                        LaunchedEffect(Unit) { requestNotificationPermissionIfNeeded() }
+                        StratosAppUi()
+                    }
+                )
             }
         }
     }

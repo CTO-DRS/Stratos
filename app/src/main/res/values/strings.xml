@@ -225,4 +225,48 @@
     <string name="notif_title_starting">Stratos is starting…</string>
     <string name="notif_text_starting">Preparing the embedded server</string>
     <string name="notif_action_stop">STOP</string>
+
+    <!-- Launch experience: splash, welcome, app tour, permissions -->
+    <string name="splash_tagline">Hosting, straight from your pocket</string>
+    <string name="welcome_greeting">مرحبًا · Hello · Merhaba</string>
+    <string name="welcome_title">Welcome to Stratos</string>
+    <string name="welcome_body">A real web server that lives on your phone — import a site, build one with AI, and publish it to the world in seconds.</string>
+    <string name="cta_get_started">Get started</string>
+    <string name="onboarding_skip">Skip</string>
+    <string name="tour_next">Next</string>
+    <string name="tour_done">Almost there</string>
+
+    <string name="tour1_title">Your phone is the server</string>
+    <string name="tour1_body">Import any website ZIP and Stratos serves it with a real engine — live on your Wi-Fi in seconds.</string>
+    <string name="tour1_p1">Real serving engine with honest, on-device metrics</string>
+    <string name="tour1_p2">Host multiple sites at once</string>
+    <string name="tour1_p3">Hardened imports — zip-slip, symlink and archive-bomb protection</string>
+
+    <string name="tour2_title">Create with AI, refine in the editor</string>
+    <string name="tour2_body">Describe the site you want and get a complete page in one tap — then fine-tune every detail in the built-in editor.</string>
+    <string name="tour2_p1">Works fully offline, or with your own AI key</string>
+    <string name="tour2_p2">Syntax highlighting for HTML, CSS, JS, JSON, YAML and more</string>
+    <string name="tour2_p3">Live preview served by the real engine</string>
+
+    <string name="tour3_title">Share it with the world</string>
+    <string name="tour3_body">A QR code for your Wi-Fi, a Cloudflare tunnel for the whole internet, and a guided wizard for your own domain.</string>
+    <string name="tour3_p1">Quick Tunnel — one tap, zero setup</string>
+    <string name="tour3_p2">Custom domains with the 5-step wizard</string>
+    <string name="tour3_p3">Tunnel tokens sealed in the Keystore vault</string>
+
+    <string name="perm_title">A few things to allow</string>
+    <string name="perm_subtitle">Stratos asks only for what the server genuinely needs. You can continue either way.</string>
+    <string name="perm_notif_title">Notifications</string>
+    <string name="perm_notif_body">Shows the hosting status and a STOP button — required for background hosting on Android 13 and newer.</string>
+    <string name="perm_files_title">Files (Android 12 and older)</string>
+    <string name="perm_files_body">Only used to open site ZIPs you pick from Downloads or other apps. Your files are never uploaded.</string>
+    <string name="perm_battery_title">Unrestricted background</string>
+    <string name="perm_battery_body">Stops Android from pausing your web server while other apps run. Recommended for reliable hosting.</string>
+    <string name="perm_allowed">Allowed</string>
+    <string name="perm_not_yet">Not yet</string>
+    <string name="perm_allow">Allow</string>
+    <string name="perm_open_settings">Open settings</string>
+    <string name="perm_finish">Start using Stratos</string>
+    <string name="perm_later">Later</string>
+    <string name="settings_replay_intro">Replay introduction</string>
 </resources>
