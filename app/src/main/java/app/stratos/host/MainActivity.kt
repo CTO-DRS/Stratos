@@ -87,15 +87,15 @@ class MainActivity : AppCompatActivity() {
      */
     private fun handleIncomingZip(intent: Intent?) {
         if (intent == null) return
-        val raw: Uri? = when (intent.action) {
+        // Branch-local elvis: `raw` is assigned a non-null Uri on every path,
+        // so no smart cast is needed anywhere downstream (K2-safe).
+        val raw: Uri = when (intent.action) {
             Intent.ACTION_SEND ->
                 @Suppress("DEPRECATION")
-                intent.getParcelableExtra(Intent.EXTRA_STREAM)
-            Intent.ACTION_VIEW -> intent.data
-            else -> null
-        } ?: return
-        // Non-null parameter (not a smart cast) so the coroutine lambdas below
-        // see a guaranteed-immutable, non-nullable Uri.
+                intent.getParcelableExtra<Uri>(Intent.EXTRA_STREAM) ?: return
+            Intent.ACTION_VIEW -> intent.data ?: return
+            else -> return
+        }
         stageIncoming(raw)
     }
 
