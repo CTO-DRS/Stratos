@@ -62,14 +62,13 @@ object CustomDomain {
     )
 
     /** Lowercases, strips scheme/path/whitespace and a trailing dot. */
-    fun normalize(input: String): String =
-        input.trim()
-            .removePrefix("https://")
-            .removePrefix("http://")
-            .substringBefore('/')
-            .trim()
-            .trimEnd('.')
-            .lowercase()
+    fun normalize(input: String): String {
+        var s = input.trim()
+        val lower = s.lowercase()
+        if (lower.startsWith("https://")) s = s.substring(8)
+        else if (lower.startsWith("http://")) s = s.substring(7)
+        return s.substringBefore('/').trim().trimEnd('.').lowercase()
+    }
 
     fun isValid(hostname: String): Boolean = HOSTNAME_REGEX.matches(hostname)
 
