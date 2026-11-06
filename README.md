@@ -16,7 +16,7 @@
 
 <p>
   <img alt="Android" src="https://img.shields.io/badge/Android-8.0%2B-3DDC84?style=flat-square&logo=android&logoColor=white" />
-  <img alt="Version" src="https://img.shields.io/badge/version-0.1.0-0A7CFF?style=flat-square" />
+  <img alt="Version" src="https://img.shields.io/badge/version-1.0.0-0B6BFF?style=flat-square" />
   <img alt="Kotlin" src="https://img.shields.io/badge/Kotlin-2.1-7F52FF?style=flat-square&logo=kotlin&logoColor=white" />
   <img alt="Compose" src="https://img.shields.io/badge/Jetpack-Compose-4285F4?style=flat-square&logo=jetpackcompose&logoColor=white" />
   <img alt="Go" src="https://img.shields.io/badge/Go-stdlib%20only-00ADD8?style=flat-square&logo=go&logoColor=white" />
@@ -46,7 +46,7 @@
 | 🤖 **بنّاء مواقع AI** | الميزة الأقوى: صِف مشروعك فيولّد ستراتوس موقعاً كاملاً — **يعمل دون اتصال** بمولّد قوالب ذكي، أو عبر أي API متوافق مع OpenAI (Z.ai GLM / OpenAI / OpenRouter) بمفتاحك المشفّر |
 | ✏️ **محرر أكواد مدمج** | شجرة ملفات + محرر sora-editor + **تلوين نحوي TextMate** (HTML/CSS/JS/JSON/MD/YAML/XML) متزامن مع الوضع الداكن + معاينة حية عبر الخادم الحقيقي على loopback |
 | 🌍 **ثلاثي اللغات** | عربي (RTL كامل) + إنجليزي + تركي، بتبديل فوري داخل التطبيق |
-| 🎨 **تصميم Vercel** | ثيم فاتح نظيف (مع داكن تلقائي)، حدود رفيعة، زجاجية خفيفة |
+| 🎨 **واجهة Stratos 2035** | زجاج شفاف فوق شفق قطبي حيّ، رصيف عائم متوهّج، وأزرار بطاقة طاقة متدرّجة — ثيم فاتح + داكن تلقائيًا |
 | 🔐 **خصوصية مطلقة** | لا حسابات، لا إعلانات، لا تحليلات، لا تتبع. التوكنات مشفّرة بـ Keystore AES-256-GCM والسجلات معتّمة |
 | ⛓️ **نفق Cloudflare** | نفق سريع برابط مؤقت `*.trycloudflare.com` بلا حساب، أو نفق مسمّى باسم نطاقك + **معالج نطاق مخصص** من 5 خطوات (فك معرّف النفق العام فقط → تعليمات CNAME → تحقق HTTPS فعلي) |
 
@@ -153,13 +153,16 @@ Stratos answers: *"I built a site with an AI tool — how do I get it online fro
 - **Honest metrics** — requests, active connections, p50/p95/max, status codes, memory, storage, battery temperature, network counters. What the platform hides is shown as *Unavailable*, never invented.
 - **AI site builder (the killer feature)** — describe your project and Stratos generates a complete single-file site: fully **offline** via a smart template engine, or through any OpenAI-compatible API (Z.ai GLM / OpenAI / OpenRouter) with your key, AES-256-GCM encrypted on device.
 - **Built-in code editor** — file tree + sora-editor + **TextMate syntax highlighting** (HTML/CSS/JS/JSON/MD/YAML/XML, official vscode/Red Hat grammars) synced with the dark theme + live preview through the real server on loopback.
+- **Stratos 2035 interface** — translucent glass over a living aurora backdrop, floating glowing dock, energy-sweep gradient CTAs; light + automatic dark.
 - **Trilingual** — Arabic (full RTL), English, Turkish with in-app switching.
-- **Vercel-grade design** — clean light theme with automatic dark companion.
 - **Cloudflare Tunnel** — Quick tunnel (temporary `*.trycloudflare.com`, no account) or Named tunnel for your own domain, with a **guided 5-step custom-domain wizard** (decodes only the public tunnel ID → CNAME instructions → live HTTPS verification).
 
 ### Download
 
-CI builds a debug APK on every push to `main` — grab it from **Actions → latest run → Artifacts**, or from the **Releases** page for tagged versions (`v0.1.0`).
+The build pipeline is split in two (`.github/workflows/`):
+
+- **`ci.yml`** — on every push/PR: Go engine tests + Kotlin JVM tests (gates), then a debug APK published under **Actions → Artifacts**.
+- **`release.yml`** — on a `v*` tag: tests again, then a signed release APK (when the keystore secrets are configured; otherwise a clearly-labelled debug APK is published) attached to the GitHub **Release** with SHA-256 checksums. Current release: **`v1.0.0`**.
 
 ### Build
 
@@ -199,6 +202,7 @@ Stratos şunu çözer: *"AI aracıyla bir site kurdum — telefonumdan nasıl ya
 - **AI site yapıcı** — projenizi anlatın; Stratos tam bir tek-dosya site üretir: **çevrimdışı** şablon motoruyla veya OpenAI-uyumlu API (Z.ai GLM / OpenAI / OpenRouter) ile; anahtarınız cihazda AES-256-GCM şifreli.
 - **Dahili kod düzenleyici** — dosya ağacı + sora-editor + **TextMate sözdizimi renklendirme** (HTML/CSS/JS/JSON/MD/YAML/XML) + loopback üzerinden canlı önizleme.
 - **Üç dil** — Arapça (tam RTL), İngilizce, Türkçe; uygulama içi geçiş.
+- **Stratos 2035 arayüzü** — canlı aurora üzerinde yarı saydam cam, yüzen ışıklı dock, enerji geçişli gradient düğmeler; açık + otomatik koyu tema.
 - **Cloudflare Tüneli** — Hızlı tünel (hesapsız) veya kendi alan adınız için adlandırılmış tünel + **5 adımlı özel alan adı sihirbazı** (yalnızca genel tünel kimliği çözülür → CNAME talimatları → canlı HTTPS doğrulaması).
 
 ### Kurulum

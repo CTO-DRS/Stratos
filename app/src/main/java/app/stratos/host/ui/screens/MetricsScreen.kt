@@ -2,10 +2,11 @@ package app.stratos.host.ui.screens
 
 import android.app.ActivityManager
 import android.content.Context
-import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.StatFs
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -31,7 +32,11 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -50,6 +55,8 @@ import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.components.StatCard
 import app.stratos.host.ui.components.StatusDot
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.glassFill
+import app.stratos.host.ui.theme.stratosIsDark
 import app.stratos.host.util.Formatters
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -116,11 +123,9 @@ class MetricsViewModel : ViewModel() {
         val stTotalGb = stat.totalBytes / (1024.0 * 1024 * 1024)
         val stUsedGb = (stat.totalBytes - stat.availableBytes) / (1024.0 * 1024 * 1024)
 
-        // Temperature comes from the ACTION_BATTERY_CHANGED sticky broadcast
-        // (tenths of a degree Celsius). There is no BATTERY_PROPERTY_TEMPERATURE.
-        val batteryIntent = context.registerReceiver(null, IntentFilter(android.content.Intent.ACTION_BATTERY_CHANGED))
-        val tempRaw = batteryIntent?.getIntExtra(BatteryManager.EXTRA_TEMPERATURE, -1) ?: -1
-        val temp = tempRaw.takeIf { it > 0 }?.toDouble()?.div(10.0) ?: -1.0
+        val bm = context.getSystemService(Context.BATTERY_SERVICE) as? BatteryManager
+        val temp = bm?.getIntProperty(BatteryManager.BATTERY_PROPERTY_TEMPERATURE)
+            ?.takeIf { it > 0 }?.toDouble()?.div(10.0) ?: -1.0
 
         val rx = android.net.TrafficStats.getTotalRxBytes().takeIf { it > 0 } ?: -1L
         val tx = android.net.TrafficStats.getTotalTxBytes().takeIf { it > 0 } ?: -1L
@@ -179,7 +184,7 @@ fun MetricsScreen(nav: NavHostController, vm: MetricsViewModel = viewModel()) {
                     modifier = Modifier.padding(end = 12.dp)
                 ) { Text(stringResource(R.string.reset)) }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 
         Column(
@@ -326,22 +331,29 @@ private val MaterialThemeColorFallback = StratosColors.Accent
 
 @Composable
 private fun Bar(fraction: Float, color: androidx.compose.ui.graphics.Color, modifier: Modifier = Modifier) {
+    val anim by animateFloatAsState(
+        targetValue = fraction.coerceIn(0f, 1f),
+        animationSpec = tween(500),
+        label = "statusBar"
+    )
     Canvas(modifier.height(8.dp)) {
-        val w = size.width * fraction.coerceIn(0f, 1f)
+        val w = size.width * anim
         drawRoundRect(
             color = color,
-            size = androidx.compose.ui.geometry.Size(w, size.height),
-            cornerRadius = androidx.compose.ui.geometry.CornerRadius(6f, 6f)
+            size = Size(w, size.height),
+            cornerRadius = CornerRadius(6f, 6f)
         )
     }
 }
 
-/** Minimal sparkline (accent stroke, soft fill). */
+/** Plasma sparkline: gradient sweep stroke, ion glow, fading fill. */
 @Composable
 private fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
-    val lineColor = StratosColors.Accent
-    val fillColor = StratosColors.AccentSoft
-    Canvas(modifier.background(fillColor, RoundedCornerShape(10.dp))) {
+    val dark = stratosIsDark()
+    val sweep = Brush.horizontalGradient(
+        listOf(StratosColors.GlowA, StratosColors.GlowB, StratosColors.GlowC)
+    )
+    Canvas(modifier.background(glassFill(dark), RoundedCornerShape(12.dp))) {
         if (values.size < 2) return@Canvas
         val maxV = (values.maxOrNull() ?: 1.0).coerceAtLeast(1.0)
         val stepX = size.width / (values.size - 1)
@@ -359,11 +371,21 @@ private fun Sparkline(values: List<Double>, modifier: Modifier = Modifier) {
             lineTo(0f, size.height)
             close()
         }
-        drawPath(fill, fillColor)
-        drawPath(path, lineColor, style = Stroke(width = 4f, cap = StrokeCap.Round))
-        // last point marker
+        drawPath(
+            fill,
+            Brush.verticalGradient(
+                listOf(StratosColors.GlowA.copy(alpha = 0.30f), Color.Transparent),
+                startY = 0f,
+                endY = size.height
+            )
+        )
+        // Ion glow underlay, then the crisp gradient sweep.
+        drawPath(path, StratosColors.GlowB.copy(alpha = 0.32f), style = Stroke(width = 9f, cap = StrokeCap.Round))
+        drawPath(path, sweep, style = Stroke(width = 3.5f, cap = StrokeCap.Round))
+        // Live head marker
         val lastX = (values.size - 1) * stepX
         val lastY = size.height - ((values.last() / maxV) * scaleY).toFloat()
-        drawCircle(lineColor, radius = 8f, center = Offset(lastX, lastY))
+        drawCircle(StratosColors.GlowB.copy(alpha = 0.38f), radius = 11f, center = Offset(lastX, lastY))
+        drawCircle(Color.White, radius = 4.5f, center = Offset(lastX, lastY))
     }
 }

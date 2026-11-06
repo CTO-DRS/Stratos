@@ -8,51 +8,95 @@ import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
-// ---- Vercel-inspired palette (light-first) ---------------------------------
+// ---- Stratos 2035 palette --------------------------------------------------
+// Deep-space glass + aurora. Surfaces are translucent by design; the aurora
+// backdrop (see Effects.kt) breathes behind the glass so the UI feels alive.
 
 object StratosColors {
-    // Light
-    val LightBg = Color(0xFFFFFFFF)
-    val LightSurface = Color(0xFFFAFAFA)
-    val LightSurfaceVariant = Color(0xFFF4F4F5)
-    val LightOutline = Color(0xFFE4E4E7)
-    val LightOutlineStrong = Color(0xFFCFCFD4)
-    val LightText = Color(0xFF0A0A0A)
-    val LightMuted = Color(0xFF71717A)
-    val Accent = Color(0xFF0A7CFF)
-    val AccentSoft = Color(0xFFEAF4FF)
-    val Success = Color(0xFF16A34A)
-    val SuccessSoft = Color(0xFFE9F9EF)
-    val Warning = Color(0xFFD97706)
-    val WarningSoft = Color(0xFFFFF4E5)
+    // Light ("glacier") — cold ice-white with ambient tint channels.
+    val LightBg = Color(0xFFF6F8FF)
+    val LightSurface = Color(0xFFFDFFFF)
+    val LightSurfaceVariant = Color(0xFFEEF2FC)
+    val LightOutline = Color(0xFFDCE3F4)
+    val LightOutlineStrong = Color(0xFFC6CFE6)
+    val LightText = Color(0xFF0B1020)
+    val LightMuted = Color(0xFF5D657E)
+    val Accent = Color(0xFF0B6BFF)
+    val AccentSoft = Color(0xFFE8F1FF)
+    val Success = Color(0xFF0FA968)
+    val SuccessSoft = Color(0xFFE5F8EF)
+    val Warning = Color(0xFFC77400)
+    val WarningSoft = Color(0xFFFFF3E0)
     val Error = Color(0xFFDC2626)
     val ErrorSoft = Color(0xFFFDECEC)
 
-    // Dark
-    val DarkBg = Color(0xFF0A0A0A)
-    val DarkSurface = Color(0xFF111111)
-    val DarkSurfaceVariant = Color(0xFF171717)
-    val DarkOutline = Color(0xFF27272A)
-    val DarkText = Color(0xFFFAFAFA)
-    val DarkMuted = Color(0xFF9F9FA8)
-    val DarkAccent = Color(0xFF3B9EFF)
+    // Dark ("deep space") — near-black blue, aurora-ready.
+    val DarkBg = Color(0xFF05060C)
+    val DarkSurface = Color(0xFF0B0E18)
+    val DarkSurfaceVariant = Color(0xFF131828)
+    val DarkOutline = Color(0xFF252D44)
+    val DarkText = Color(0xFFF2F5FF)
+    val DarkMuted = Color(0xFF8C93AD)
+    val DarkAccent = Color(0xFF5EA2FF)
+
+    // Glow gradient stops — the signature "2035" energy sweep.
+    val GlowA = Color(0xFF3D7BFF) // electric blue
+    val GlowB = Color(0xFF7A5CFF) // ion violet
+    val GlowC = Color(0xFF23C4E6) // plasma cyan
+
+    // Aurora blob colors (backdrop ambience).
+    val AuroraBlue = Color(0xFF1B3B8F)
+    val AuroraViolet = Color(0xFF4C1D95)
+    val AuroraCyan = Color(0xFF0E5C74)
 }
 
+/** The signature gradient sweep, used for CTAs, indicators and hairlines. */
+fun stratosGlowBrush(): Brush = Brush.linearGradient(
+    colors = listOf(StratosColors.GlowA, StratosColors.GlowB, StratosColors.GlowC)
+)
+
+/** Hairline gradient for glass edges: bright top-left, fading bottom-right. */
+fun glassEdgeBrush(dark: Boolean): Brush = if (dark) {
+    Brush.linearGradient(
+        colors = listOf(
+            Color.White.copy(alpha = 0.20f),
+            Color.White.copy(alpha = 0.05f),
+            Color.White.copy(alpha = 0.02f)
+        )
+    )
+} else {
+    Brush.linearGradient(
+        colors = listOf(
+            Color(0xFF0B1020).copy(alpha = 0.14f),
+            Color(0xFF0B1020).copy(alpha = 0.05f),
+            Color(0xFF0B1020).copy(alpha = 0.03f)
+        )
+    )
+}
+
+/** Glass fill for panels: translucent so the aurora glows through. */
+fun glassFill(dark: Boolean): Color =
+    if (dark) Color.White.copy(alpha = 0.045f)
+    else Color.White.copy(alpha = 0.62f)
+
 private val LightScheme = lightColorScheme(
-    primary = Color(0xFF0A0A0A),
+    primary = Color(0xFF0B1020),
     onPrimary = Color.White,
-    primaryContainer = Color(0xFF171717),
+    primaryContainer = Color(0xFF111A33),
     onPrimaryContainer = Color.White,
     secondary = StratosColors.Accent,
     onSecondary = Color.White,
     secondaryContainer = StratosColors.AccentSoft,
-    onSecondaryContainer = Color(0xFF084B8F),
+    onSecondaryContainer = Color(0xFF073E85),
     tertiary = StratosColors.Success,
     background = StratosColors.LightBg,
     onBackground = StratosColors.LightText,
@@ -69,15 +113,15 @@ private val LightScheme = lightColorScheme(
 )
 
 private val DarkScheme = darkColorScheme(
-    primary = Color(0xFFFAFAFA),
-    onPrimary = Color(0xFF0A0A0A),
-    primaryContainer = Color(0xFF27272A),
-    onPrimaryContainer = Color(0xFFFAFAFA),
+    primary = Color(0xFFF2F5FF),
+    onPrimary = Color(0xFF05060C),
+    primaryContainer = Color(0xFF252D44),
+    onPrimaryContainer = Color(0xFFF2F5FF),
     secondary = StratosColors.DarkAccent,
-    onSecondary = Color(0xFF06213D),
+    onSecondary = Color(0xFF041830),
     secondaryContainer = Color(0xFF0D2A4A),
     onSecondaryContainer = Color(0xFFBFE0FF),
-    tertiary = Color(0xFF4ADE80),
+    tertiary = Color(0xFF34D399),
     background = StratosColors.DarkBg,
     onBackground = StratosColors.DarkText,
     surface = StratosColors.DarkSurface,
@@ -85,7 +129,7 @@ private val DarkScheme = darkColorScheme(
     surfaceVariant = StratosColors.DarkSurfaceVariant,
     onSurfaceVariant = StratosColors.DarkMuted,
     outline = StratosColors.DarkOutline,
-    outlineVariant = Color(0xFF1F1F23),
+    outlineVariant = Color(0xFF1A2136),
     error = Color(0xFFF87171),
     errorContainer = Color(0xFF3B0D0D),
     onError = Color(0xFF0A0A0A),
@@ -93,18 +137,18 @@ private val DarkScheme = darkColorScheme(
 )
 
 private val StratosShapes = Shapes(
-    extraSmall = RoundedCornerShape(6.dp),
-    small = RoundedCornerShape(8.dp),
-    medium = RoundedCornerShape(12.dp),
-    large = RoundedCornerShape(16.dp),
-    extraLarge = RoundedCornerShape(22.dp)
+    extraSmall = RoundedCornerShape(10.dp),
+    small = RoundedCornerShape(14.dp),
+    medium = RoundedCornerShape(18.dp),
+    large = RoundedCornerShape(22.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
 
 private val StratosTypography = Typography(
-    headlineLarge = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp),
-    headlineMedium = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.3).sp),
-    headlineSmall = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.2).sp),
-    titleLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold),
+    headlineLarge = TextStyle(fontSize = 30.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.5).sp),
+    headlineMedium = TextStyle(fontSize = 25.sp, fontWeight = FontWeight.Bold, letterSpacing = (-0.4).sp),
+    headlineSmall = TextStyle(fontSize = 21.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.3).sp),
+    titleLarge = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.SemiBold, letterSpacing = (-0.1).sp),
     titleMedium = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight.SemiBold),
     titleSmall = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
     bodyLarge = TextStyle(fontSize = 15.5.sp, fontWeight = FontWeight.Normal, lineHeight = 24.sp),
@@ -112,10 +156,16 @@ private val StratosTypography = Typography(
     bodySmall = TextStyle(fontSize = 12.5.sp, fontWeight = FontWeight.Normal, lineHeight = 18.sp),
     labelLarge = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
     labelMedium = TextStyle(fontSize = 12.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.2.sp),
-    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.3.sp)
+    labelSmall = TextStyle(fontSize = 11.sp, fontWeight = FontWeight.Medium, letterSpacing = 0.4.sp)
 )
 
-/** Light-first theme (default), with an automatic dark companion. */
+/** Tracks the active Stratos darkness for glass/aurora helpers. */
+val LocalStratosDark = staticCompositionLocalOf { false }
+
+@Composable
+fun stratosIsDark(): Boolean = LocalStratosDark.current
+
+/** 2035 theme: glass surfaces over a living aurora, light-first default. */
 @Composable
 fun StratosTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
@@ -124,7 +174,10 @@ fun StratosTheme(
     MaterialTheme(
         colorScheme = if (darkTheme) DarkScheme else LightScheme,
         shapes = StratosShapes,
-        typography = StratosTypography,
-        content = content
-    )
+        typography = StratosTypography
+    ) {
+        CompositionLocalProvider(LocalStratosDark provides darkTheme) {
+            content()
+        }
+    }
 }

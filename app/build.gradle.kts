@@ -15,9 +15,25 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "0.1.0"
+        versionName = "1.0.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations += listOf("en", "ar", "tr")
+    }
+
+    signingConfigs {
+        create("env") {
+            // CI release signing — filled from environment/secrets; inert locally.
+            // When STRATOS_KEYSTORE_FILE is absent the release build simply stays
+            // unsigned and the pipeline falls back to the debug APK (documented skip).
+            val ksFile = System.getenv("STRATOS_KEYSTORE_FILE")
+            val ksPass = System.getenv("STRATOS_KEYSTORE_PASSWORD")
+            if (!ksFile.isNullOrEmpty() && !ksPass.isNullOrEmpty()) {
+                storeFile = File(ksFile)
+                storePassword = ksPass
+                keyAlias = System.getenv("STRATOS_KEY_ALIAS") ?: "stratos"
+                keyPassword = System.getenv("STRATOS_KEY_PASSWORD") ?: ksPass
+            }
+        }
     }
 
     buildTypes {
@@ -25,6 +41,9 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            if (!System.getenv("STRATOS_KEYSTORE_FILE").isNullOrEmpty()) {
+                signingConfig = signingConfigs.getByName("env")
+            }
         }
         debug {
             applicationIdSuffix = ".debug"
@@ -86,6 +105,7 @@ dependencies {
     implementation(libs.sora.editor)
     implementation(libs.sora.editor.language)
     implementation(libs.zxing.core)
+
     coreLibraryDesugaring(libs.android.tools.desugar)
 
     testImplementation(libs.junit)

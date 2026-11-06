@@ -56,6 +56,8 @@ import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.clickableNoRipple
 import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.GlowButton
+import androidx.compose.ui.text.font.FontWeight
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
@@ -189,7 +191,7 @@ fun AiBuilderScreen(nav: NavHostController, vm: AiViewModel = viewModel()) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = stringResource(R.string.back))
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 
         Column(
@@ -273,7 +275,7 @@ fun AiBuilderScreen(nav: NavHostController, vm: AiViewModel = viewModel()) {
                         }
                     }
 
-                    Button(
+                    GlowButton(
                         onClick = {
                             vm.generate(
                                 mode, title, tagline, about,
@@ -287,10 +289,14 @@ fun AiBuilderScreen(nav: NavHostController, vm: AiViewModel = viewModel()) {
                         modifier = Modifier.fillMaxWidth()
                     ) {
                         if (state == AiViewModel.GenState.Working) {
-                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = MaterialTheme.colorScheme.onPrimary)
+                            CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp, color = androidx.compose.ui.graphics.Color.White)
                             Spacer(Modifier.width(8.dp))
                         }
-                        Text(stringResource(R.string.ai_generate))
+                        Text(
+                            stringResource(R.string.ai_generate),
+                            color = androidx.compose.ui.graphics.Color.White,
+                            fontWeight = FontWeight.SemiBold
+                        )
                     }
                 }
             }

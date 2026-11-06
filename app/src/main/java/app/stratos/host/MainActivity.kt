@@ -8,12 +8,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatDelegate
-import androidx.core.content.ContextCompat
-import androidx.core.os.LocaleListCompat
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.core.content.ContextCompat
+import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.lifecycleScope
+import app.stratos.host.data.Settings
 import app.stratos.host.ui.StratosAppUi
 import app.stratos.host.ui.theme.StratosTheme
 import kotlinx.coroutines.flow.first
@@ -48,15 +49,16 @@ class MainActivity : AppCompatActivity() {
         requestNotificationPermissionIfNeeded()
 
         setContent {
-            // Honor the persisted theme setting (light | dark | system).
-            val prefs by StratosApp.instance.graph.settings.settings
-                .collectAsState(initial = app.stratos.host.data.Settings())
-            val darkTheme = when (prefs.theme) {
+            // The persisted theme choice (light | dark | system) now truly
+            // drives StratosTheme; default "system" follows the OS.
+            val settings by StratosApp.instance.graph.settings.settings
+                .collectAsState(initial = Settings())
+            val dark = when (settings.theme) {
                 "dark" -> true
                 "light" -> false
                 else -> isSystemInDarkTheme()
             }
-            StratosTheme(darkTheme = darkTheme) {
+            StratosTheme(darkTheme = dark) {
                 StratosAppUi()
             }
         }

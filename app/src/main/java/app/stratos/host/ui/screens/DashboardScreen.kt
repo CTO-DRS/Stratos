@@ -69,7 +69,10 @@ import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.components.StatCard
 import app.stratos.host.ui.components.StatusDot
+import app.stratos.host.ui.theme.GlowButton
+import app.stratos.host.ui.theme.LogoTile
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.stratosGlass
 import app.stratos.host.util.Formatters
 import app.stratos.host.util.QrCode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -127,14 +130,7 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
         TopAppBar(
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Box(
-                        Modifier
-                            .size(26.dp)
-                            .background(MaterialTheme.colorScheme.primary, RoundedCornerShape(7.dp)),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Text("▲", color = MaterialTheme.colorScheme.background, fontSize = 13.sp, fontWeight = FontWeight.Bold)
-                    }
+                    LogoTile(sizeDp = 28)
                     Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
                     if ((state as? HostState.Running)?.engineKind == EngineKind.KOTLIN) {
                         Pill("KOTLIN", StratosColors.WarningSoft, StratosColors.Warning)
@@ -148,7 +144,7 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                     Icon(Icons.Filled.Settings, contentDescription = stringResource(R.string.settings))
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 
         Column(
@@ -181,7 +177,7 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                     }
 
                     val starting = state is HostState.Starting || state is HostState.Stopping
-                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         val running = state is HostState.Running
                         if (running) {
                             Button(
@@ -194,7 +190,7 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                                 modifier = Modifier.weight(1f)
                             ) { Text(stringResource(R.string.stop_hosting)) }
                         } else {
-                            Button(
+                            GlowButton(
                                 onClick = { vm.start() },
                                 enabled = !starting,
                                 modifier = Modifier.weight(1f)
@@ -202,11 +198,15 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                                 if (starting) {
                                     CircularProgressIndicator(
                                         Modifier.size(16.dp), strokeWidth = 2.dp,
-                                        color = MaterialTheme.colorScheme.onPrimary
+                                        color = androidx.compose.ui.graphics.Color.White
                                     )
                                     Spacer(Modifier.width(8.dp))
                                 }
-                                Text(stringResource(R.string.start_hosting))
+                                Text(
+                                    stringResource(R.string.start_hosting),
+                                    color = androidx.compose.ui.graphics.Color.White,
+                                    fontWeight = FontWeight.SemiBold
+                                )
                             }
                         }
                     }
@@ -319,8 +319,7 @@ private fun UrlRow(url: String) {
     Row(
         Modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
-            .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(10.dp))
+            .stratosGlass(RoundedCornerShape(14.dp), highlight = false)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {

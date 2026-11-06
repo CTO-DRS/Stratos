@@ -65,6 +65,7 @@ import app.stratos.host.data.SitesRepository
 import app.stratos.host.ui.Routes
 import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
+import app.stratos.host.ui.theme.GlowFab
 import app.stratos.host.ui.theme.StratosColors
 import app.stratos.host.util.Formatters
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -155,17 +156,20 @@ fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
     }
 
     Scaffold(
+        containerColor = androidx.compose.ui.graphics.Color.Transparent,
         floatingActionButton = {
-            FloatingActionButton(
-                onClick = { pickZip.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
-                containerColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.onPrimary
-            ) { Icon(Icons.Filled.Add, contentDescription = stringResource(R.string.import_site)) }
+            GlowFab(
+                icon = Icons.Filled.Add,
+                contentDescription = stringResource(R.string.import_site),
+                onClick = {
+                    pickZip.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream"))
+                }
+            )
         },
         topBar = {
             TopAppBar(
                 title = { Text(stringResource(R.string.nav_sites)) },
-                colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+                colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
             )
         }
     ) { padding ->

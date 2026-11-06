@@ -58,6 +58,7 @@ import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.components.StatusDot
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.stratosGlass
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -115,7 +116,7 @@ fun TunnelScreen(nav: NavHostController, vm: TunnelViewModel = viewModel()) {
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             title = { Text(stringResource(R.string.nav_tunnel)) },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
         Column(
             Modifier
@@ -264,7 +265,7 @@ fun TunnelScreen(nav: NavHostController, vm: TunnelViewModel = viewModel()) {
                     Modifier
                         .padding(12.dp)
                         .fillMaxWidth()
-                        .background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(10.dp))
+                        .stratosGlass(RoundedCornerShape(12.dp), highlight = false)
                         .padding(12.dp)
                 ) {
                     if (tail.isEmpty()) {
@@ -319,13 +320,13 @@ private fun PublicUrlRow(url: String) {
     Row(
         Modifier
             .fillMaxWidth()
-            .background(StratosColors.SuccessSoft, RoundedCornerShape(10.dp))
+            .stratosGlass(RoundedCornerShape(14.dp), highlight = false)
             .padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         StatusDot(StratosColors.Success)
         Spacer(Modifier.width(10.dp))
-        MonoText(url, Modifier.weight(1f), color = androidx.compose.ui.graphics.Color(0xFF14532D))
+        MonoText(url, Modifier.weight(1f))
         IconButton(onClick = {
             val cm = context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as android.content.ClipboardManager
             cm.setPrimaryClip(android.content.ClipData.newPlainText("url", url))

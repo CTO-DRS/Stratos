@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Stratos 2035 — deep-space night palette (DayNight picks these up). -->
+    <color name="brand_bg">#05060C</color>
+    <color name="brand_surface">#0B0E18</color>
+    <color name="brand_text">#F2F5FF</color>
+    <color name="brand_accent">#5EA2FF</color>
+    <color name="brand_success">#34D399</color>
+    <color name="brand_warning">#FBBF24</color>
+    <color name="brand_error">#F87171</color>
+</resources>

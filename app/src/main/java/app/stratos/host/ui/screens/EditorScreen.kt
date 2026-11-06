@@ -3,7 +3,6 @@ package app.stratos.host.ui.screens
 import android.annotation.SuppressLint
 import android.webkit.WebView
 import android.webkit.WebViewClient
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -57,7 +56,6 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavHostController
 import app.stratos.host.R
 import app.stratos.host.StratosApp
@@ -193,13 +191,6 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
     var mode by rememberSaveable { mutableStateOf(0) } // 0 = files, 1 = preview
     var reloadKey by rememberSaveable { mutableStateOf(0) }
 
-    // Editor colors follow the persisted theme setting (light/dark/system).
-    val editorDark = when (settings.theme) {
-        "dark" -> true
-        "light" -> false
-        else -> isSystemInDarkTheme()
-    }
-
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
             navigationIcon = {
@@ -232,7 +223,7 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
                     )
                 }
             },
-            colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.background)
+            colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 
         // Mode switch: Files | Preview
@@ -314,8 +305,7 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
                         CodeEditorView(
                             content = fileContent,
                             onContentChanged = { vm.updateContent(it) },
-                            file = openFile,
-                            isDark = editorDark
+                            file = openFile
                         )
                     }
                 }
@@ -344,14 +334,14 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
 private fun CodeEditorView(
     content: String,
     onContentChanged: (String) -> Unit,
-    file: File?,
-    isDark: Boolean
+    file: File?
 ) {
     val context = LocalContext.current
+    val dark = app.stratos.host.ui.theme.stratosIsDark()
     val textMateReady = remember { SyntaxSupport.init(context) }
     val editor = remember {
         CodeEditor(context).apply {
-            setLineNumberEnabled(true)
+            lineNumberEnabled = true
             isWordwrap = false
             typefaceText = android.graphics.Typeface.MONOSPACE
             setTextSize(13f)
@@ -362,11 +352,13 @@ private fun CodeEditorView(
         }
     }
 
-    // Apply highlighting per file and re-theme on dark/light change.
-    LaunchedEffect(textMateReady, file, isDark) {
+    // Apply highlighting per file and re-theme on dark/light change, then pin
+    // the 2035 surface palette back on top of the token theme.
+    LaunchedEffect(textMateReady, file, dark) {
         if (textMateReady) {
-            SyntaxSupport.apply(editor, file, isDark)
+            SyntaxSupport.apply(editor, file, dark)
         }
+        applyEditorScheme(editor, dark)
     }
 
     // Push external content changes into the editor (e.g. file switch).
@@ -376,14 +368,42 @@ private fun CodeEditorView(
         }
     }
 
+    // Keep the editor surface in sync with the Stratos 2035 theme.
     AndroidView(
         modifier = Modifier.fillMaxSize(),
-        factory = { editor }
+        factory = { editor },
+        update = { e -> applyEditorScheme(e, dark) }
     )
 
     DisposableEffect(Unit) {
         onDispose { editor.release() }
     }
+}
+
+/** Theme-aware palette for the sora editor (Stratos 2035 glass tones).
+ *  Mutates the editor's CURRENT scheme — never replaces it — so TextMate
+ *  token colors installed by SyntaxSupport survive; only surface keys are
+ *  pinned here (background, line numbers, current line, selection). */
+private fun applyEditorScheme(editor: CodeEditor, dark: Boolean) {
+    val s = editor.colorScheme ?: return
+    if (dark) {
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.WHOLE_BACKGROUND, 0xFF0B0E18.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_BACKGROUND, 0xFF0B0E18.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER, 0xFF8C93AD.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_CURRENT, 0xFF5EA2FF.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.TEXT_NORMAL, 0xFFF2F5FF.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.CURRENT_LINE, 0xFF131828.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.SELECTION, 0x3D3D7BFF.toInt())
+    } else {
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.WHOLE_BACKGROUND, 0xFFFDFFFF.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_BACKGROUND, 0xFFFDFFFF.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER, 0xFF8A93A8.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.LINE_NUMBER_CURRENT, 0xFF0B6BFF.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.TEXT_NORMAL, 0xFF0B1020.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.CURRENT_LINE, 0xFFEEF2FC.toInt())
+        s.setColor(io.github.rosemoe.sora.widget.schemes.EditorColorScheme.SELECTION, 0x333D7BFF.toInt())
+    }
+    editor.setColorScheme(s)
 }
 
 /** Loopback-locked preview: JS on, everything else locked down. */
