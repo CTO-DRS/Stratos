@@ -44,6 +44,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -71,6 +72,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.material.icons.filled.FormatAlignLeft
+import androidx.compose.material.icons.filled.FormatAlignJustify
 import java.io.File
 
 /** A flattened, expandable view of the site's file tree. */
@@ -227,7 +230,7 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
             colors = TopAppBarDefaults.topAppBarColors(containerColor = androidx.compose.ui.graphics.Color.Transparent)
         )
 
-        // Mode switch: Files | Preview
+        // Mode switch: Files | Preview + editor zoom / wrap controls
         Row(
             Modifier
                 .fillMaxWidth()
@@ -245,6 +248,43 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
                     onClick = { mode = 1 },
                     shape = SegmentedButtonDefaults.itemShape(1, 2)
                 ) { Text(stringResource(R.string.tab_preview)) }
+            }
+            if (mode == 0) {
+                // Text-size stepper — persisted, applied live to the editor.
+                val scope = rememberCoroutineScope()
+                val scale = settings.editorScale
+                IconButton(
+                    onClick = { scope.launch { StratosApp.instance.graph.settings.setEditorScale(scale - 10) } },
+                    enabled = scale > 60,
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Text("A\u2212", style = MaterialTheme.typography.labelLarge)
+                }
+                Text(
+                    "$scale%",
+                    style = MaterialTheme.typography.labelSmall,
+                    fontFamily = FontFamily.Monospace,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                IconButton(
+                    onClick = { scope.launch { StratosApp.instance.graph.settings.setEditorScale(scale + 10) } },
+                    enabled = scale < 200,
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Text("A+", style = MaterialTheme.typography.labelLarge)
+                }
+                // Word-wrap toggle.
+                IconButton(
+                    onClick = { scope.launch { StratosApp.instance.graph.settings.setEditorWrap(!settings.editorWrap) } },
+                    modifier = Modifier.size(34.dp)
+                ) {
+                    Icon(
+                        if (settings.editorWrap) Icons.Filled.FormatAlignJustify else Icons.Filled.FormatAlignLeft,
+                        contentDescription = stringResource(R.string.editor_wrap),
+                        tint = if (settings.editorWrap) StratosColors.Accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
             }
             if (mode == 1) {
                 Spacer(Modifier.width(8.dp))
@@ -306,7 +346,9 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
                         CodeEditorView(
                             content = fileContent,
                             onContentChanged = { vm.updateContent(it) },
-                            file = openFile
+                            file = openFile,
+                            scalePercent = settings.editorScale,
+                            wrap = settings.editorWrap
                         )
                     }
                 }
@@ -330,12 +372,15 @@ fun EditorScreen(nav: NavHostController, siteId: String, vm: EditorViewModel = v
 
 /** sora-editor wrapped for Compose. Line numbers on; content synced on change.
  *  Syntax highlighting via bundled TextMate grammars (VS Code sets, MIT).
- *  Falls back silently to plain text if the engine cannot initialize. */
+ *  Falls back silently to plain text if the engine cannot initialize.
+ *  Text size and word-wrap follow the persisted editor settings. */
 @Composable
 private fun CodeEditorView(
     content: String,
     onContentChanged: (String) -> Unit,
-    file: File?
+    file: File?,
+    scalePercent: Int,
+    wrap: Boolean
 ) {
     val context = LocalContext.current
     val dark = app.stratos.host.ui.theme.stratosIsDark()
@@ -360,6 +405,12 @@ private fun CodeEditorView(
             SyntaxSupport.apply(editor, file, dark)
         }
         applyEditorScheme(editor, dark)
+    }
+
+    // Live text-size / word-wrap from the persisted editor settings.
+    LaunchedEffect(scalePercent, wrap) {
+        editor.setTextSize(13f * scalePercent.coerceIn(60, 200) / 100f)
+        editor.isWordwrap = wrap
     }
 
     // Push external content changes into the editor (e.g. file switch).

@@ -18,8 +18,11 @@ All notable changes to Stratos are documented here. Format: Keep a Changelog 1.1
 - **Foreground hosting service** (`specialUse`): partial wake lock + high-perf Wi-Fi lock, persistent notification with STOP, clean stop on every path.
 - **Trilingual UI** (Arabic full RTL, English, Turkish) with per-app language switching.
 - **QR code** for the LAN URL; copy/open actions everywhere.
+- **Share-target import**: ACTION_SEND / ACTION_VIEW entry points — a ZIP shared from any app or opened from a file manager is staged into the app cache and flows into the same guarded import preview; the transient content URI is copied immediately, never reused later.
+- **Share action** on the dashboard for the live LAN URL (system share sheet).
+- **Editor text-size (60–200%) and word-wrap controls**, persisted in settings and applied live to the sora editor.
 - Tests: 31 Go tests (server, ZIP security, bus, redaction, percentiles; race-clean) + Kotlin JVM tests (ZIP security incl. hand-built duplicate-entry ZIPs, tunnel-token decoding, path helpers, redaction, template generator).
-- **Build pipeline** (`.github/workflows/`): `ci.yml` (Go + JVM gates, debug APK artifact on every push/PR) and `release.yml` (`v*` tags → signed-or-documented-fallback APK on the GitHub Release with SHA-256 checksums).
+- **Unified build pipeline** (`.github/workflows/build.yml`, replacing the earlier two-file pair): Go + JVM gates → debug APK artifact on every push/PR; `v*` tags → signed-or-documented-fallback APK on the GitHub Release with SHA-256 checksums.
 
 ### Changed
 - **Stratos 2035 interface** (version number unchanged):

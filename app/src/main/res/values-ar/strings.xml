@@ -17,6 +17,8 @@
     <string name="off">معطّل</string>
     <string name="copy">نسخ</string>
     <string name="open">فتح</string>
+    <string name="share">مشاركة</string>
+    <string name="editor_wrap">التفاف الأسطر</string>
     <string name="refresh">تحديث</string>
     <string name="more">المزيد</string>
     <string name="edit">تحرير</string>

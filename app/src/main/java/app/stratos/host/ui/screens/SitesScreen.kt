@@ -155,6 +155,18 @@ fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
         }
     }
 
+    // Consume ZIPs handed over from the share-target / open-with entry points
+    // (staged into the cache by MainActivity). One at a time; each opens the
+    // existing import-preview dialog.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        StratosApp.instance.pendingImports.collect { pending ->
+            pending.firstOrNull()?.let { uri ->
+                StratosApp.instance.consumeImport(uri)
+                vm.stage(uri)
+            }
+        }
+    }
+
     Scaffold(
         containerColor = androidx.compose.ui.graphics.Color.Transparent,
         floatingActionButton = {

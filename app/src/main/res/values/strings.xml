@@ -17,6 +17,8 @@
     <string name="off">Off</string>
     <string name="copy">Copy</string>
     <string name="open">Open</string>
+    <string name="share">Share</string>
+    <string name="editor_wrap">Word wrap</string>
     <string name="refresh">Refresh</string>
     <string name="more">More</string>
     <string name="edit">Edit</string>

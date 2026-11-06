@@ -1,32 +1,99 @@
-name: release
+name: build
 
-# Stratos release — gates BEFORE anything is published:
-#   tag v*  ->  Go + JVM tests -> APK -> GitHub Release (APK + SHA-256 checksums)
+# Stratos — unified build pipeline (replaces the previous ci.yml + release.yml pair).
 #
-# Signing: when the keystore secrets are configured the release APK is signed;
-# otherwise a clearly-labelled DEBUG APK is published instead — a DOCUMENTED
-# skip, never a red run (same policy as the reference pipeline).
+#   push / PR  →  gates (Go tests + Kotlin JVM tests)  →  debug APK artifact
+#   tag v*     →  gates → release APK → GitHub Release with SHA-256 checksums
+#
+# Signing policy: when the keystore secrets are configured the release APK is
+# signed; otherwise a clearly-labelled DEBUG APK is published instead — a
+# DOCUMENTED skip, never a red run.
 #
 # Required GitHub secrets (optional — only for signed releases):
 #   ANDROID_KEYSTORE_B64     base64 of stratos.keystore   (base64 -w0 < stratos.keystore)
 #   STRATOS_KS_PASS          keystore + key password
 #   STRATOS_KEY_ALIAS        key alias (default "stratos")
+#
+# NOTE: no tokens belong in this file. Authentication is GitHub's own; the
+# personal access token used for the initial push never enters the repository.
 
 on:
   push:
+    branches: ["main"]
     tags: ["v*"]
+  pull_request:
   workflow_dispatch:
 
 permissions:
   contents: write
 
 concurrency:
-  group: release-${{ github.ref }}
-  cancel-in-progress: false
+  group: build-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/v') }}
 
 jobs:
+  gates:
+    name: Quality gates (Go + JVM tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Go engine tests (race-clean)
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: engine/go.mod
+      - run: go test ./... -race
+        working-directory: engine
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Kotlin JVM unit tests
+        run: ./gradlew :app:testDebugUnitTest --stacktrace
+
+      - name: Upload test reports (on failure)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: app/build/reports/tests/
+          if-no-files-found: ignore
+
+  apk:
+    name: Debug APK
+    needs: gates
+    if: ${{ !startsWith(github.ref, 'refs/tags/v') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      - name: Build debug APK
+        run: ./gradlew :app:assembleDebug --stacktrace
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Stratos-debug-apk
+          path: app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
+
   release:
-    name: Test, build and publish
+    name: Release (tag v*)
+    needs: gates
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
@@ -59,23 +126,11 @@ jobs:
           echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/stratos.keystore"
           chmod 600 "$RUNNER_TEMP/stratos.keystore"
 
-      # ---- gates BEFORE anything is published ----
-      - name: Go engine tests (race-clean)
-        uses: actions/setup-go@v5
-        with:
-          go-version-file: engine/go.mod
-      - run: go test ./... -race
-        working-directory: engine
-
-      - name: Kotlin JVM unit tests
-        run: ./gradlew :app:testDebugUnitTest --stacktrace
-
-      # ---- build (signed when secrets exist, debug otherwise) ----
       - name: Build APKs
         env:
           STRATOS_KEYSTORE_FILE: ${{ steps.sec.outputs.present == 'true' && format('{0}/stratos.keystore', runner.temp) || '' }}
           STRATOS_KEYSTORE_PASSWORD: ${{ secrets.STRATOS_KS_PASS }}
-          STRATOS_KEY_ALIAS: stratos
+          STRATOS_KEY_ALIAS: ${{ secrets.STRATOS_KEY_ALIAS || 'stratos' }}
           STRATOS_KEY_PASSWORD: ${{ secrets.STRATOS_KS_PASS }}
         run: ./gradlew :app:assembleDebug :app:assembleRelease --stacktrace
 

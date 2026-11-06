@@ -17,6 +17,8 @@
     <string name="off">Kapalı</string>
     <string name="copy">Kopyala</string>
     <string name="open">Aç</string>
+    <string name="share">Paylaş</string>
+    <string name="editor_wrap">Satır kaydırma</string>
     <string name="refresh">Yenile</string>
     <string name="more">Daha fazla</string>
     <string name="edit">Düzenle</string>
