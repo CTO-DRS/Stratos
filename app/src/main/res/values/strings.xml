@@ -69,6 +69,11 @@
     <string name="delete_site">Delete site</string>
     <string name="delete_site_title">Delete this site?</string>
     <string name="delete_site_body">“%1$s” and all of its files will be removed from the device. This cannot be undone.</string>
+    <string name="export_zip">Export ZIP</string>
+    <string name="exporting">Exporting…</string>
+    <string name="export_working">Packing the site files into a ZIP archive…</string>
+    <string name="export_done">Site exported. Find the archive in the folder you picked — re-import it anywhere, or share it as usual.</string>
+    <string name="export_failed">Export failed</string>
 
     <!-- Editor -->
     <string name="editor">Editor</string>

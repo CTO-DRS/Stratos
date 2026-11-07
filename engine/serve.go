@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -40,7 +41,7 @@ func (s *Server) serveSite(w http.ResponseWriter, r *http.Request, st *site, rel
 			s.serveIndexFallback(w, r, st, start)
 			return
 		}
-		s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "The page you requested does not exist on this server.")
+		s.missNotFound(w, r, st, start)
 		return
 	}
 	defer f.Close()
@@ -52,52 +53,148 @@ func (s *Server) serveSite(w http.ResponseWriter, r *http.Request, st *site, rel
 	}
 
 	if info.IsDir() {
-		// Directory: resolve index.html / index.htm; redirect bare dirs.
-		indexPath := joinPath(unrooted, "index.html")
-		iff, err2 := st.root.Open(indexPath)
-		if err2 != nil {
-			iff, err2 = st.root.Open(joinPath(unrooted, "index.htm"))
-			if err2 != nil {
-				if st.cfg.SPA {
-					s.serveIndexFallback(w, r, st, start)
-					return
-				}
-				s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "Directory has no index page.")
-				return
-			}
-		}
-		defer iff.Close()
-		iinfo, err2 := iff.Stat()
-		if err2 != nil || iinfo.IsDir() {
-			s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "Directory has no index page.")
-			return
-		}
+		// Directory: redirect the bare form to the trailing-slash URL
+		// first, so relative links (auto-index entries and relative
+		// pages inside the site) resolve against the right base.
 		if unrooted != "." && !strings.HasSuffix(r.URL.Path, "/") {
 			http.Redirect(w, r, r.URL.Path+"/", http.StatusMovedPermanently)
 			s.metrics.Record(http.StatusMovedPermanently, time.Since(start), 0)
 			return
 		}
-		s.stream(w, r, iff, iinfo, st, start)
+		// Resolve index.html / index.htm inside this directory.
+		var iff *os.File
+		var iinfo os.FileInfo
+		for _, name := range []string{"index.html", "index.htm"} {
+			cf, err := st.root.Open(joinPath(unrooted, name))
+			if err != nil {
+				continue
+			}
+			ci, err2 := cf.Stat()
+			if err2 != nil || ci.IsDir() {
+				cf.Close()
+				continue
+			}
+			iff, iinfo = cf, ci
+			break
+		}
+		if iff != nil {
+			defer iff.Close()
+			s.stream(w, r, iff, iinfo, st, start)
+			return
+		}
+		// SPA: fall back to the site-root index for client routing.
+		if st.cfg.SPA && s.serveIndexFile(w, r, st, start) {
+			return
+		}
+		// No index anywhere → branded auto-index of this directory.
+		s.serveDirListing(w, r, st, unrooted, start)
 		return
 	}
 
 	s.stream(w, r, f, info, st, start)
 }
 
-// serveIndexFallback serves the site's /index.html for SPA client routes.
-func (s *Server) serveIndexFallback(w http.ResponseWriter, r *http.Request, st *site, start time.Time) {
+// serveIndexFile streams the site-root index.html. It reports whether the
+// index exists; false lets the caller fall through to the 404 path.
+func (s *Server) serveIndexFile(w http.ResponseWriter, r *http.Request, st *site, start time.Time) bool {
 	idx, err := st.root.Open("index.html")
 	if err != nil {
-		s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "The page you requested does not exist on this server.")
-		return
+		return false
 	}
 	defer idx.Close()
 	info, err := idx.Stat()
 	if err != nil || info.IsDir() {
-		s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "The page you requested does not exist on this server.")
-		return
+		return false
 	}
 	s.stream(w, r, idx, info, st, start)
+	return true
+}
+
+// serveIndexFallback serves the site's /index.html for SPA client routes.
+func (s *Server) serveIndexFallback(w http.ResponseWriter, r *http.Request, st *site, start time.Time) {
+	if s.serveIndexFile(w, r, st, start) {
+		return
+	}
+	s.missNotFound(w, r, st, start)
+}
+
+// missNotFound answers a miss: the site's own 404.html when it ships one,
+// otherwise the branded Stratos page.
+func (s *Server) missNotFound(w http.ResponseWriter, r *http.Request, st *site, start time.Time) {
+	if s.serveCustom404(w, r, st, start) {
+		return
+	}
+	s.errorStatus(w, r, http.StatusNotFound, "404 — Not Found", "The page you requested does not exist on this server.")
+}
+
+// serveCustom404 streams the site's own 404.html (when present at the site
+// root) with a real 404 status. Reports whether it was served.
+func (s *Server) serveCustom404(w http.ResponseWriter, r *http.Request, st *site, start time.Time) bool {
+	f, err := st.root.Open("404.html")
+	if err != nil {
+		return false
+	}
+	defer f.Close()
+	info, err := f.Stat()
+	if err != nil || info.IsDir() {
+		return false
+	}
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	w.WriteHeader(http.StatusNotFound)
+	if r.Method != http.MethodHead {
+		_, _ = io.Copy(w, f)
+	}
+	s.metrics.Record(http.StatusNotFound, time.Since(start), info.Size())
+	return true
+}
+
+// serveDirListing renders the branded auto-index for a directory that has no
+// index page. Entries sort directories first; names are HTML- and URL-escaped;
+// every link stays inside the site root by construction (all paths flow
+// through the same confined resolution as regular requests).
+func (s *Server) serveDirListing(w http.ResponseWriter, r *http.Request, st *site, dirPath string, start time.Time) {
+	d, err := st.root.Open(dirPath)
+	if err != nil {
+		s.errorStatus(w, r, http.StatusInternalServerError, "500 — Server Error", "Cannot read the directory.")
+		return
+	}
+	defer d.Close()
+	entries, err := d.ReadDir(-1)
+	if err != nil {
+		s.errorStatus(w, r, http.StatusInternalServerError, "500 — Server Error", "Cannot read the directory.")
+		return
+	}
+	sort.Slice(entries, func(i, j int) bool {
+		a, b := entries[i], entries[j]
+		if a.IsDir() != b.IsDir() {
+			return a.IsDir()
+		}
+		return strings.ToLower(a.Name()) < strings.ToLower(b.Name())
+	})
+	rows := make([]listingRow, 0, len(entries))
+	for _, e := range entries {
+		row := listingRow{Name: e.Name(), Dir: e.IsDir()}
+		if ef, err := st.root.Open(joinPath(dirPath, e.Name())); err == nil {
+			if fi, err2 := ef.Stat(); err2 == nil {
+				row.Size, row.Mtime = fi.Size(), fi.ModTime()
+			}
+			ef.Close()
+		}
+		rows = append(rows, row)
+	}
+	body := dirListingPage(dirPath, rows)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.Header().Set("X-Content-Type-Options", "nosniff")
+	w.Header().Set("Referrer-Policy", "strict-origin-when-cross-origin")
+	w.WriteHeader(http.StatusOK)
+	if r.Method != http.MethodHead {
+		_, _ = w.Write([]byte(body))
+	}
+	s.metrics.Record(http.StatusOK, time.Since(start), int64(len(body)))
 }
 
 // stream writes one regular file with caching, compression and range support.

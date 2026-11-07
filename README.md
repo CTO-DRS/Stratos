@@ -22,7 +22,7 @@
   <img alt="Go" src="https://img.shields.io/badge/Go-stdlib%20only-00ADD8?style=flat-square&logo=go&logoColor=white" />
 </p>
 <p>
-  <img alt="Go tests" src="https://img.shields.io/badge/Go%20tests-31%20passing-16A34A?style=flat-square" />
+  <img alt="Go tests" src="https://img.shields.io/badge/Go%20tests-36%20passing-16A34A?style=flat-square" />
   <img alt="Languages" src="https://img.shields.io/badge/langs-AR%20%C2%B7%20EN%20%C2%B7%20TR-0A7CFF?style=flat-square" />
   <img alt="License" src="https://img.shields.io/badge/license-MIT-71717A?style=flat-square" />
 </p>
@@ -42,7 +42,8 @@
 | 🚀 **محرك مزدوج** | محرك Go (مكتبة قياسية فقط) مدمج عبر `gomobile bind` + محرك Kotlin (NanoHTTPD) احتياطي يعمل من الصندوق بدون أي خطوة إضافية |
 | 🔒 **استيراد ZIP آمن** | فحص ZIP-Slip والروابط الرمزية وقنابل الضغط والتشفير والأسماء المكررة وCRC32 لكل مدخل — قبل أن يلمس التخزين، والاستخراج ذرّي |
 | 📥 **هدف مشاركة** | شارك أي ZIP من أي تطبيق (أو اضغطه في مدير الملفات) ← «مشاركة ← Stratos» فيُفتح معالج الاستيراد نفسه مباشرة |
-| 🌐 **مواقع متعددة** | موقع افتراضي على `/` ومواقع ثانوية على `/s/<id>/` مع SPA fallback وETag/304 وgzip وRange |
+| 📤 **تصدير المواقع** | أخرِج أي موقع كحزمة ZIP جاهزة لإعادة الاستيراد أو المشاركة — بياناتك تخرج بسهولة كما دخلت |
+| 🌐 **مواقع متعددة** | موقع افتراضي على `/` ومواقع ثانوية على `/s/<id>/` مع SPA fallback وETag/304 وgzip وRange و**فهرس مجلدات تلقائي** عندما لا يوجد index.html و**صفحة 404 مخصّصة** لكل موقع (404.html في الجذر) |
 | 📊 **مقاييس صادقة** | طلبات، اتصالات نشطة، p50/p95/max، رموز الحالة، ذاكرة، تخزين، حرارة البطارية، شبكة — وإن منع النظام قياساً تُظهر «غير متاح» ولا تختلق أرقاماً |
 | 🤖 **بنّاء مواقع AI** | الميزة الأقوى: صِف مشروعك فيولّد ستراتوس موقعاً كاملاً — **يعمل دون اتصال** بمولّد قوالب ذكي، أو عبر أي API متوافق مع OpenAI (Z.ai GLM / OpenAI / OpenRouter) بمفتاحك المشفّر |
 | ✏️ **محرر أكواد مدمج** | شجرة ملفات + محرر sora-editor + **تلوين نحوي TextMate** (HTML/CSS/JS/JSON/MD/YAML/XML) متزامن مع الوضع الداكن + تحكم بحجم الخط والتفاف الأسطر + معاينة حية عبر الخادم الحقيقي على loopback |
@@ -153,7 +154,8 @@ Stratos answers: *"I built a site with an AI tool — how do I get it online fro
 - **Dual engine** — a stdlib-only Go server (via `gomobile bind`) plus a pure-Kotlin NanoHTTPD fallback that runs out of the box. Same contract, zero UI difference.
 - **Secure ZIP import** — zip-slip, symlinks, bombs, encrypted/duplicate entries and per-entry CRC32 are rejected *before* storage; extraction is atomic.
 - **Share-target import** — share any ZIP from any app (or tap it in a file manager) → *Share → Stratos* opens the same guarded import flow; streams are staged into the app cache before parsing.
-- **Multi-site** — default site at `/`, secondary sites at `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range, branded 404/welcome pages.
+- **Site export** — any site leaves the same door it entered: the site menu packs its files back into a ZIP you save through the system picker — re-import it anywhere or share it as usual.
+- **Multi-site** — default site at `/`, secondary sites at `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range, a **branded auto-index** whenever a directory has no index.html, and a **per-site custom 404 page** (drop a `404.html` in the site root).
 - **Honest metrics** — requests, active connections, p50/p95/max, status codes, memory, storage, battery temperature, network counters. What the platform hides is shown as *Unavailable*, never invented.
 - **AI site builder (the killer feature)** — describe your project and Stratos generates a complete single-file site: fully **offline** via a smart template engine, or through any OpenAI-compatible API (Z.ai GLM / OpenAI / OpenRouter) with your key, AES-256-GCM encrypted on device.
 - **Built-in code editor** — file tree + sora-editor + **TextMate syntax highlighting** (HTML/CSS/JS/JSON/MD/YAML/XML, official vscode/Red Hat grammars) synced with the dark theme + **persistent text-size and word-wrap controls** + live preview through the real server on loopback.
@@ -203,7 +205,8 @@ Stratos şunu çözer: *"AI aracıyla bir site kurdum — telefonumdan nasıl ya
 - **Çift motor** — yalnızca Go standart kütüphanesi (gomobile) + kutudan çıktığı gibi çalışan saf Kotlin (NanoHTTPD) yedek motoru. Aynı sözleşme, aynı arayüz.
 - **Güvenli ZIP içe aktarma** — zip-slip, symlink, zip bombası, şifreli/tekrarlı girdiler ve CRC32, depolamaya dokunmadan reddedilir; çıkarma atomiktir.
 - **Paylaşım hedefi** — herhangi bir uygulamadan ZIP paylaşın (veya dosya yöneticisinde dokunun) → *Paylaş → Stratos* aynı korumalı içe aktarma akışını açar.
-- **Çoklu site** — varsayılan `/`, ikincil `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range.
+- **Site dışa aktarma** — herhangi bir site girdiği kapıdan çıkar: site menüsü dosyaları sistem seçicisiyle kaydedebileceğiniz bir ZIP'e paketler.
+- **Çoklu site** — varsayılan `/`, ikincil `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range; index.html olmayan dizinlerde **markalı otomatik dizin listesi** ve site köküne konan `404.html` ile **siteye özel 404 sayfası**.
 - **Dürüst metrikler** — istekler, aktif bağlantılar, p50/p95/max, durum kodları, bellek, depolama, pil sıcaklığı. Platform gizlerse *Kullanılamıyor* yazar — asla uydurmaz.
 - **AI site yapıcı** — projenizi anlatın; Stratos tam bir tek-dosya site üretir: **çevrimdışı** şablon motoruyla veya OpenAI-uyumlu API (Z.ai GLM / OpenAI / OpenRouter) ile; anahtarınız cihazda AES-256-GCM şifreli.
 - **Dahili kod düzenleyici** — dosya ağacı + sora-editor + **TextMate sözdizimi renklendirme** (HTML/CSS/JS/JSON/MD/YAML/XML) + kalıcı yazı-boyutu ve satır-kaydırma denetimleri + loopback üzerinden canlı önizleme.

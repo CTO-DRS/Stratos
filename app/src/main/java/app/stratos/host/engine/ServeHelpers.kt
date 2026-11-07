@@ -141,6 +141,109 @@ p{color:#52525b;font-size:15px;line-height:1.65;max-width:40ch;margin:0 auto}
 </div></body></html>
 """
 
+// ---- directory auto-index ---------------------------------------------------
+
+/** One entry of the auto-index page (pure data, trivially testable). */
+data class ListingRow(
+    val name: String,
+    val isDir: Boolean,
+    val size: Long,
+    val mtimeMs: Long
+)
+
+/** Escapes text for HTML element/attribute contexts (& first, then the rest). */
+fun escapeHtml(s: String): String = s
+    .replace("&", "&amp;")
+    .replace("<", "&lt;")
+    .replace(">", "&gt;")
+    .replace("\"", "&quot;")
+    .replace("'", "&#39;")
+
+/** Percent-encodes one path segment byte-exactly (ASCII unreserved kept). */
+fun pathEscapeSegment(segment: String): String {
+    val sb = StringBuilder()
+    for (b in segment.toByteArray(Charsets.UTF_8)) {
+        val c = b.toInt() and 0xFF
+        if (c in 0x30..0x39 || c in 0x41..0x5A || c in 0x61..0x7A ||
+            c == '.'.code || c == '_'.code || c == '-'.code || c == '~'.code
+        ) {
+            sb.append(c.toChar())
+        } else {
+            sb.append('%').append(String.format("%02X", c))
+        }
+    }
+    return sb.toString()
+}
+
+private val listingDateFormat =
+    SimpleDateFormat("yyyy-MM-dd HH:mm", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }
+
+/**
+ * Branded auto-index shown when a directory has no index page — mirrors the
+ * Go engine's page byte-for-byte in structure: directories first, HTML- and
+ * URL-escaped names, parent link only below the site root, humanized sizes.
+ */
+fun dirListingHtml(rel: String, rows: List<ListingRow>): String {
+    val display = if (rel == "." || rel.isEmpty()) "/" else "/$rel"
+    val title = escapeHtml("Index of $display")
+
+    val body = StringBuilder()
+    if (rel != "." && rel.isNotEmpty()) {
+        body.append("""<tr><td colspan="3"><a class="up" href="../">&larr; ../</a></td></tr>""" + "\n")
+    }
+    for (r in rows) {
+        var label = escapeHtml(r.name)
+        var href = escapeHtml(pathEscapeSegment(r.name))
+        if (r.isDir) {
+            label += "/"
+            href += "/"
+        }
+        val size = if (r.isDir) "—" else maybeFileHelpers.humanBytes(r.size)
+        val mt = if (r.mtimeMs > 0) listingDateFormat.format(Date(r.mtimeMs)) else "—"
+        val cls = if (r.isDir) """ class="dir"""" else ""
+        body.append(
+            """<tr><td><a$cls href="$href">$label</a></td><td class="dim">$size</td><td class="dim">$mt</td></tr>""" + "\n"
+        )
+    }
+    if (rows.isEmpty()) {
+        body.append("""<tr><td colspan="3" class="dim">Empty directory.</td></tr>""" + "\n")
+    }
+
+    return """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>$title · Stratos</title>
+<style>
+:root{color-scheme:light}
+*{box-sizing:border-box;margin:0}
+body{font-family:-apple-system,'Segoe UI',Roboto,'Noto Sans Arabic',sans-serif;
+background:#fafafa;color:#0a0a0a;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{background:#fff;border:1px solid #e4e4e7;border-radius:16px;padding:36px 32px;max-width:640px;width:100%}
+.code{font-size:13px;letter-spacing:.08em;color:#71717a;text-transform:uppercase}
+h1{font-size:20px;margin:10px 0 18px;font-weight:600;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+table{width:100%;border-collapse:collapse;font-size:14.5px}
+td{padding:7px 6px;border-bottom:1px solid #f0f0f2}
+td:first-child{max-width:60%;overflow-wrap:anywhere}
+a{color:#0B6BFF;text-decoration:none}
+a:hover{text-decoration:underline}
+a.up{color:#52525b}
+.dir a{font-weight:600}
+.dim{color:#a1a1aa;font-size:13px;white-space:nowrap;font-family:ui-monospace,SFMono-Regular,Menlo,monospace}
+.brand{margin-top:22px;font-size:13px;color:#a1a1aa}.brand b{color:#0a0a0a;font-weight:600}
+</style>
+</head>
+<body><div class="card">
+<div class="code">Stratos · directory</div>
+<h1>$title</h1>
+<table>
+$body</table>
+<div class="brand">Served by <b>Stratos</b> · your pocket server</div>
+</div></body></html>"""
+}
+
 /** Small shared helpers (kept here so the engine layer stays dependency-free). */
 object maybeFileHelpers {
     fun humanBytes(b: Long): String = when {

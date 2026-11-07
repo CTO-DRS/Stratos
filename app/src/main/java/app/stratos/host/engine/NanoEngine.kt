@@ -12,6 +12,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
 import java.security.MessageDigest
+import java.util.Locale
 import java.util.zip.GZIPOutputStream
 import java.io.ByteArrayOutputStream
 
@@ -198,7 +199,7 @@ class NanoEngine : EngineApi {
                 site = synchronized(lock) { registry.firstOrNull { it.id == secondary.groupValues[1] } }
                 rel = secondary.groupValues[2].ifBlank { "/" }
                 if (site == null) {
-                    return notFound(session, started, "This site is not hosted (disabled or removed).")
+                    return notFound(session, null, started, "This site is not hosted (disabled or removed).")
                 }
             } else {
                 site = synchronized(lock) { def }
@@ -217,36 +218,46 @@ class NanoEngine : EngineApi {
         private fun serveFile(session: IHTTPSession, site: EngineSite, relIn: String, started: Long): Response {
             val rootDir = File(site.root)
             val rel = normalize(relIn)
-                ?: return notFound(session, started, "Malformed path.")
+                ?: return notFound(session, site, started, "Malformed path.")
             var f = resolveConfined(rootDir, rel)
-                ?: return notFound(session, started, "Malformed path.")
+                ?: return notFound(session, site, started, "Malformed path.")
 
-            var isDirListing = false
             if (f.isDirectory) {
+                // Bare directory → trailing-slash form so relative links
+                // (auto-index entries and relative pages) resolve correctly.
+                if (rel != "." && !relIn.endsWith("/")) {
+                    metrics.record(301, started, 0)
+                    return newFixedLengthResponse(Status.REDIRECT, "text/plain", "")
+                        .apply {
+                            addHeader("Location", "$relIn/")
+                            addHeader("Cache-Control", "no-cache")
+                        }
+                }
                 val idx = sequenceOf("index.html", "index.htm")
                     .map { File(f, it) }.firstOrNull { it.isFile }
                 if (idx != null) {
                     f = idx
-                } else if (site.spa) {
-                    val home = resolveConfined(rootDir, "index.html")
-                    if (home != null && home.isFile) {
+                } else {
+                    // SPA: fall back to the site-root index for client routing.
+                    val home = if (site.spa) {
+                        resolveConfined(rootDir, "index.html")?.takeIf { it.isFile }
+                    } else null
+                    if (home != null) {
                         f = home
                     } else {
-                        return notFound(session, started, "Directory has no index page.")
+                        // No index anywhere → branded auto-index of the directory.
+                        return dirListing(session, f, rel, started)
                     }
-                } else {
-                    return notFound(session, started, "Directory has no index page.")
                 }
-                isDirListing = rel == "." || relIn.endsWith("/")
             }
 
             if (!f.isFile) {
                 if (site.spa && !rel.contains('.')) {
                     val home = resolveConfined(rootDir, "index.html")
                     if (home != null && home.isFile) f = home else
-                        return notFound(session, started, "The page you requested does not exist on this server.")
+                        return notFound(session, site, started, "The page you requested does not exist on this server.")
                 } else {
-                    return notFound(session, started, "The page you requested does not exist on this server.")
+                    return notFound(session, site, started, "The page you requested does not exist on this server.")
                 }
             }
 
@@ -298,10 +309,41 @@ class NanoEngine : EngineApi {
             } else {
                 resp.addHeader("Cache-Control", "public, max-age=3600")
             }
-            if (isDirListing && !relIn.endsWith("/") && rel != ".") {
-                // keep it simple: we already resolved the index; no redirect
-            }
             return resp
+        }
+
+        /**
+         * Branded auto-index for a directory without an index page. The
+         * directory is the already-confined [dir]; entries sort directories
+         * first; names are HTML- and URL-escaped by [dirListingHtml].
+         */
+        private fun dirListing(session: IHTTPSession, dir: File, rel: String, started: Long): Response {
+            val rows = (dir.listFiles() ?: emptyArray<File>())
+                .sortedWith(
+                    compareByDescending<File> { it.isDirectory }
+                        .thenBy { it.name.lowercase(Locale.ROOT) }
+                )
+                .map {
+                    ListingRow(
+                        name = it.name,
+                        isDir = it.isDirectory,
+                        size = if (it.isDirectory) 0L else it.length(),
+                        mtimeMs = it.lastModified()
+                    )
+                }
+            val html = dirListingHtml(rel, rows)
+            metrics.record(200, started, html.toByteArray(Charsets.UTF_8).size.toLong())
+            if (session.method == Method.HEAD) {
+                return newFixedLengthResponse(Status.OK, "text/html; charset=utf-8", "")
+            }
+            return newChunkedResponse(
+                Status.OK, "text/html; charset=utf-8",
+                ByteArrayInputStream(html.toByteArray(Charsets.UTF_8))
+            ).apply {
+                addHeader("Cache-Control", "no-cache")
+                addHeader("X-Content-Type-Options", "nosniff")
+                addHeader("Referrer-Policy", "strict-origin-when-cross-origin")
+            }
         }
 
         private fun fullResponse(session: IHTTPSession, f: File, ct: String): Response {
@@ -327,7 +369,25 @@ class NanoEngine : EngineApi {
             resp.addHeader("Allow", "GET, HEAD")
         }
 
-        private fun notFound(session: IHTTPSession, started: Long, msg: String): Response {
+        private fun notFound(session: IHTTPSession, site: EngineSite?, started: Long, msg: String): Response {
+            // The site ships its own 404.html → serve it with a real 404.
+            if (site != null) {
+                val custom = resolveConfined(File(site.root), "404.html")
+                if (custom != null && custom.isFile) {
+                    metrics.record(404, started, custom.length())
+                    val resp = if (session.method == Method.HEAD) {
+                        newFixedLengthResponse(Status.NOT_FOUND, "text/html; charset=utf-8", "")
+                    } else {
+                        newFixedLengthResponse(
+                            Status.NOT_FOUND, "text/html; charset=utf-8",
+                            FileInputStream(custom), custom.length()
+                        )
+                    }
+                    resp.addHeader("Cache-Control", "no-cache")
+                    resp.addHeader("X-Content-Type-Options", "nosniff")
+                    return resp
+                }
+            }
             metrics.record(404, started, 0)
             return respondPage(Status.NOT_FOUND, session, "404 — Not Found", msg)
         }

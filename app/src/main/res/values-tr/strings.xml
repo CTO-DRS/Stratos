@@ -69,6 +69,11 @@
     <string name="delete_site">Siteyi sil</string>
     <string name="delete_site_title">Bu site silinsin mi?</string>
     <string name="delete_site_body">“%1$s” ve tüm dosyaları cihazdan kaldırılacak. Bu işlem geri alınamaz.</string>
+    <string name="export_zip">ZIP olarak dışa aktar</string>
+    <string name="exporting">Dışa aktarılıyor…</string>
+    <string name="export_working">Site dosyaları ZIP arşivine paketleniyor…</string>
+    <string name="export_done">Site dışa aktarıldı. Arşivi seçtiğiniz klasörde bulabilirsiniz — istediğiniz yere yeniden içe aktarın veya her zamanki gibi paylaşın.</string>
+    <string name="export_failed">Dışa aktarma başarısız</string>
 
     <!-- Düzenleyici -->
     <string name="editor">Düzenleyici</string>

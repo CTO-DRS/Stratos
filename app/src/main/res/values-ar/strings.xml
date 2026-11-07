@@ -69,6 +69,11 @@
     <string name="delete_site">حذف الموقع</string>
     <string name="delete_site_title">حذف هذا الموقع؟</string>
     <string name="delete_site_body">سيُحذف «%1$s» مع جميع ملفاته من الجهاز. لا يمكن التراجع.</string>
+    <string name="export_zip">تصدير ZIP</string>
+    <string name="exporting">جارٍ التصدير…</string>
+    <string name="export_working">جارٍ ضغط ملفات الموقع في أرشيف ZIP…</string>
+    <string name="export_done">تم تصدير الموقع. ستجد الأرشيف في المجلد الذي اخترته — أعِد استيراده في أي مكان، أو شاركه كما تريد.</string>
+    <string name="export_failed">فشل التصدير</string>
 
     <!-- المحرر -->
     <string name="editor">المحرر</string>

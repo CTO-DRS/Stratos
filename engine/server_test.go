@@ -240,6 +240,183 @@ func TestSpaFallback(t *testing.T) {
 	if resp2.StatusCode != 404 {
 		t.Fatalf("missing asset should 404, got %d", resp2.StatusCode)
 	}
+	// SPA directory without its own index falls back to the site root.
+	resp3, body3 := get(t, base+"/assets/", nil)
+	if resp3.StatusCode != 200 || !strings.Contains(body3, "Main Home") {
+		t.Fatalf("SPA dir fallback failed: %d %q", resp3.StatusCode, body3)
+	}
+}
+
+func TestDirListing(t *testing.T) {
+	base, _, stop := newTestServer(t, false)
+	defer stop()
+
+	// assets/ has no index → branded auto-index with every entry.
+	resp, body := get(t, base+"/assets/", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("want 200 listing, got %d", resp.StatusCode)
+	}
+	if !strings.Contains(body, "style.css") || !strings.Contains(body, "big.txt") {
+		t.Fatalf("listing missing entries: %q", body)
+	}
+	if !strings.Contains(body, "Index of /assets") {
+		t.Fatalf("listing missing title: %q", body)
+	}
+	if ct := resp.Header.Get("Content-Type"); !strings.HasPrefix(ct, "text/html") {
+		t.Fatalf("bad content type: %q", ct)
+	}
+	if resp.Header.Get("X-Content-Type-Options") != "nosniff" {
+		t.Fatal("missing nosniff header")
+	}
+
+	// Bare directory redirects to the trailing-slash form (no follow).
+	noFollow := &http.Client{CheckRedirect: func(req *http.Request, via []*http.Request) error {
+		return http.ErrUseLastResponse
+	}}
+	req, _ := http.NewRequest(http.MethodGet, base+"/assets", nil)
+	rresp, err := noFollow.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rresp.Body.Close()
+	if rresp.StatusCode != http.StatusMovedPermanently {
+		t.Fatalf("bare dir should redirect, got %d", rresp.StatusCode)
+	}
+	if loc := rresp.Header.Get("Location"); loc != "/assets/" {
+		t.Fatalf("bad redirect target: %q", loc)
+	}
+
+	// HEAD renders headers only.
+	req, _ = http.NewRequest(http.MethodHead, base+"/assets/", nil)
+	hresp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hresp.Body.Close()
+	if hresp.StatusCode != 200 {
+		t.Fatalf("HEAD listing failed: %d", hresp.StatusCode)
+	}
+
+	// Directories sort before files; sizes are humanized.
+	resp, body = get(t, base+"/assets/", nil)
+	if !strings.Contains(body, "KB") && !strings.Contains(body, "B") {
+		t.Fatalf("listing missing size column: %q", body)
+	}
+
+	// A site root with an index keeps serving it (no listing).
+	_, body = get(t, base+"/", nil)
+	if !strings.Contains(body, "Main Home") {
+		t.Fatalf("index page displaced by listing: %q", body)
+	}
+}
+
+func TestDirListingEscapeAndParent(t *testing.T) {
+	dir := t.TempDir()
+	site := filepath.Join(dir, "site")
+	sub := filepath.Join(site, "docs")
+	if err := os.MkdirAll(sub, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(site, "weird <&>.txt"), []byte("x"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(sub, "a.txt"), []byte("hello"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	srv, err := NewServer("127.0.0.1", 0, []*SiteConfig{{ID: "m", Root: site, Default: true, Enabled: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	base := "http://" + srv.Addr()
+
+	// Root listing: name HTML-escaped, no parent link at the root.
+	resp, body := get(t, base+"/", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("root listing failed: %d", resp.StatusCode)
+	}
+	if strings.Contains(body, "weird <&>") {
+		t.Fatalf("raw name leaked unescaped: %q", body)
+	}
+	if !strings.Contains(body, "weird &lt;&amp;&gt;.txt") {
+		t.Fatalf("escaped name missing: %q", body)
+	}
+	if strings.Contains(body, `href="../"`) {
+		t.Fatalf("root listing must not have a parent link: %q", body)
+	}
+
+	// Sub-directory listing: parent link present, entries reachable.
+	resp, body = get(t, base+"/docs/", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("docs listing failed: %d", resp.StatusCode)
+	}
+	if !strings.Contains(body, `href="../"`) {
+		t.Fatalf("sub listing missing parent link: %q", body)
+	}
+	if !strings.Contains(body, "a.txt") {
+		t.Fatalf("sub listing missing entry: %q", body)
+	}
+
+	// The escaped link actually resolves back through the server.
+	resp, _ = get(t, base+"/weird%20%3C%26%3E.txt", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("escaped name unreachable: %d", resp.StatusCode)
+	}
+}
+
+func TestCustom404Page(t *testing.T) {
+	dir := t.TempDir()
+	site := filepath.Join(dir, "site")
+	if err := os.MkdirAll(site, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(site, "index.html"), []byte("<h1>Home</h1>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(site, "404.html"), []byte("<h1>Custom Missing</h1>"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	srv, err := NewServer("127.0.0.1", 0, []*SiteConfig{{ID: "m", Root: site, Default: true, Enabled: true}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := srv.Start(); err != nil {
+		t.Fatal(err)
+	}
+	defer srv.Stop()
+	base := "http://" + srv.Addr()
+
+	resp, body := get(t, base+"/missing-page.html", nil)
+	if resp.StatusCode != http.StatusNotFound {
+		t.Fatalf("custom 404 must keep the real status, got %d", resp.StatusCode)
+	}
+	if !strings.Contains(body, "Custom Missing") {
+		t.Fatalf("custom 404 body not served: %q", body)
+	}
+
+	// HEAD gets the status without a body.
+	req, _ := http.NewRequest(http.MethodHead, base+"/missing-page.html", nil)
+	hresp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatal(err)
+	}
+	hresp.Body.Close()
+	if hresp.StatusCode != http.StatusNotFound {
+		t.Fatalf("HEAD custom 404 failed: %d", hresp.StatusCode)
+	}
+
+	// A site without 404.html keeps the branded page.
+	base2, _, stop2 := newTestServer(t, false)
+	defer stop2()
+	resp, body = get(t, base2+"/nope.html", nil)
+	if resp.StatusCode != http.StatusNotFound || !strings.Contains(body, "does not exist") {
+		t.Fatalf("branded 404 lost: %d %q", resp.StatusCode, body)
+	}
 }
 
 func TestWelcomeWhenNoDefault(t *testing.T) {

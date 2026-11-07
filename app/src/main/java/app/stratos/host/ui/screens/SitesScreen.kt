@@ -26,6 +26,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SaveAlt
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
@@ -68,8 +69,10 @@ import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.theme.GlowFab
 import app.stratos.host.ui.theme.StratosColors
 import app.stratos.host.util.Formatters
+import app.stratos.host.util.ZipOut
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
+import java.io.File
 
 class SitesViewModel : ViewModel() {
     private val graph = StratosApp.instance.graph
@@ -124,6 +127,35 @@ class SitesViewModel : ViewModel() {
         graph.controller.reloadSites()
     }
 
+    sealed interface ExportState {
+        data object Idle : ExportState
+        data object Working : ExportState
+        data object Done : ExportState
+        data class Error(val message: String) : ExportState
+    }
+
+    private val _export = MutableStateFlow<ExportState>(ExportState.Idle)
+    val export: MutableStateFlow<ExportState> = _export
+
+    /** Streams the site's files into the SAF destination the user picked. */
+    fun export(site: SiteEntity, uri: Uri) {
+        _export.value = ExportState.Working
+        viewModelScope.launch {
+            runCatching {
+                val resolver = StratosApp.instance.contentResolver
+                val out = resolver.openOutputStream(uri)
+                    ?: error("cannot open the selected destination")
+                out.use { stream -> ZipOut.zipDirectory(File(site.rootPath), stream) }
+            }
+                .onSuccess { _export.value = ExportState.Done }
+                .onFailure { _export.value = ExportState.Error(it.message ?: "export failed") }
+        }
+    }
+
+    fun dismissExport() {
+        _export.value = ExportState.Idle
+    }
+
     fun setDefault(site: SiteEntity) = viewModelScope.launch {
         graph.repository.setDefault(site.id)
         graph.controller.reloadSites()
@@ -140,6 +172,7 @@ class SitesViewModel : ViewModel() {
 fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
     val sites by vm.sites.collectAsState(initial = emptyList())
     val importState by vm.import.collectAsState()
+    val exportState by vm.export.collectAsState()
 
     val pickZip = rememberLauncherForActivityResult(
         ActivityResultContracts.OpenDocument()
@@ -153,6 +186,17 @@ fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
             }
             vm.stage(uri)
         }
+    }
+
+    // Site export: the user picks a destination once, the site's files are
+    // streamed into it as a ZIP (no temp copy, no size surprises).
+    val exportTarget = remember { mutableStateOf<SiteEntity?>(null) }
+    val exportZip = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        val target = exportTarget.value
+        if (uri != null && target != null) vm.export(target, uri)
+        if (uri == null) exportTarget.value = null
     }
 
     // Consume ZIPs handed over from the share-target / open-with entry points
@@ -220,7 +264,15 @@ fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
                     onSetDefault = { vm.setDefault(site) },
                     onEdit = { nav.navigate(Routes.editor(site.id)) },
                     onDelete = { vm.delete(site) },
-                    onReplace = { pickZip.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) }
+                    onReplace = { pickZip.launch(arrayOf("application/zip", "application/x-zip-compressed", "application/octet-stream")) },
+                    onExport = {
+                        exportTarget.value = site
+                        val safe = site.name
+                            .replace(Regex("[\\\\/:*?\"<>|]"), "_")
+                            .take(60)
+                            .ifBlank { "site" }
+                        exportZip.launch("$safe.zip")
+                    }
                 )
             }
             item { Spacer(Modifier.height(72.dp)) }
@@ -262,6 +314,43 @@ fun SitesScreen(nav: NavHostController, vm: SitesViewModel = viewModel()) {
         }
         else -> {}
     }
+
+    when (val ex = exportState) {
+        is SitesViewModel.ExportState.Working -> {
+            AlertDialog(
+                onDismissRequest = {},
+                confirmButton = {},
+                title = { Text(stringResource(R.string.exporting)) },
+                text = {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                        CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.5.dp)
+                        Text(stringResource(R.string.export_working))
+                    }
+                }
+            )
+        }
+        is SitesViewModel.ExportState.Done -> {
+            AlertDialog(
+                onDismissRequest = { vm.dismissExport() },
+                confirmButton = {
+                    TextButton(onClick = { vm.dismissExport() }) { Text(stringResource(R.string.close)) }
+                },
+                title = { Text(stringResource(R.string.export_zip)) },
+                text = { Text(stringResource(R.string.export_done)) }
+            )
+        }
+        is SitesViewModel.ExportState.Error -> {
+            AlertDialog(
+                onDismissRequest = { vm.dismissExport() },
+                confirmButton = {
+                    TextButton(onClick = { vm.dismissExport() }) { Text(stringResource(R.string.close)) }
+                },
+                title = { Text(stringResource(R.string.export_failed)) },
+                text = { Text(ex.message) }
+            )
+        }
+        else -> {}
+    }
 }
 
 @Composable
@@ -271,7 +360,8 @@ private fun SiteCard(
     onSetDefault: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
-    onReplace: () -> Unit
+    onReplace: () -> Unit,
+    onExport: () -> Unit
 ) {
     var menu by remember { mutableStateOf(false) }
     var confirmDelete by remember { mutableStateOf(false) }
@@ -313,6 +403,11 @@ private fun SiteCard(
                             text = { Text(stringResource(R.string.replace_content)) },
                             leadingIcon = { Icon(Icons.Filled.Refresh, null, Modifier.size(18.dp)) },
                             onClick = { menu = false; onReplace() }
+                        )
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.export_zip)) },
+                            leadingIcon = { Icon(Icons.Filled.SaveAlt, null, Modifier.size(18.dp)) },
+                            onClick = { menu = false; onExport() }
                         )
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.delete_site), color = MaterialTheme.colorScheme.error) },
