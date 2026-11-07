@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,6 +20,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
@@ -57,6 +60,7 @@ import app.stratos.host.ui.components.MonoText
 import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.components.StatusDot
+import app.stratos.host.ui.components.TokenGuideCard
 import app.stratos.host.ui.theme.StratosColors
 import app.stratos.host.ui.theme.stratosGlass
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -349,18 +353,36 @@ private fun TokenDialog(
     onDismiss: () -> Unit
 ) {
     var token by remember { mutableStateOf("") }
+    var showToken by remember { mutableStateOf(false) }
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(R.string.tunnel_token_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            Column(
+                Modifier
+                    .heightIn(max = 430.dp)
+                    .verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(10.dp)
+            ) {
                 Text(stringResource(R.string.tunnel_token_help), style = MaterialTheme.typography.bodySmall)
+                TokenGuideCard()
                 OutlinedTextField(
                     value = token,
                     onValueChange = { token = it },
                     label = { Text(stringResource(R.string.tunnel_token_field)) },
                     singleLine = true,
-                    visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    visualTransformation = if (showToken) androidx.compose.ui.text.input.VisualTransformation.None
+                    else androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                    trailingIcon = {
+                        IconButton(onClick = { showToken = !showToken }) {
+                            Icon(
+                                if (showToken) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                contentDescription = stringResource(
+                                    if (showToken) R.string.token_hide_cd else R.string.token_show_cd
+                                )
+                            )
+                        }
+                    },
                     modifier = Modifier.fillMaxWidth()
                 )
                 if (hasSaved) {

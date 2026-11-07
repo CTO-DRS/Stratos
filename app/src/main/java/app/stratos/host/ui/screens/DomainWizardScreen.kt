@@ -19,6 +19,8 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -45,6 +47,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -58,6 +61,7 @@ import app.stratos.host.tunnel.TunnelToken
 import app.stratos.host.ui.components.MonoText
 import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
+import app.stratos.host.ui.components.TokenGuideCard
 import app.stratos.host.ui.theme.StratosColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -131,6 +135,7 @@ fun DomainWizardScreen(nav: NavHostController, vm: DomainWizardViewModel = viewM
     var step by remember { mutableIntStateOf(0) }
     var domainInput by remember { mutableStateOf(settings.customDomain) }
     var tokenInput by remember { mutableStateOf("") }
+    var showToken by remember { mutableStateOf(false) }
     var tunnelId by remember { mutableStateOf<String?>(null) }
     var domainError by remember { mutableStateOf(false) }
     var tokenError by remember { mutableStateOf(false) }
@@ -228,6 +233,7 @@ fun DomainWizardScreen(nav: NavHostController, vm: DomainWizardViewModel = viewM
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        TokenGuideCard()
                         OutlinedTextField(
                             value = tokenInput,
                             onValueChange = {
@@ -238,7 +244,17 @@ fun DomainWizardScreen(nav: NavHostController, vm: DomainWizardViewModel = viewM
                             singleLine = true,
                             isError = tokenError,
                             supportingText = { if (tokenError) Text(stringResource(R.string.domain_token_invalid)) },
-                            visualTransformation = PasswordVisualTransformation(),
+                            visualTransformation = if (showToken) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showToken = !showToken }) {
+                                    Icon(
+                                        if (showToken) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                                        contentDescription = stringResource(
+                                            if (showToken) R.string.token_hide_cd else R.string.token_show_cd
+                                        )
+                                    )
+                                }
+                            },
                             modifier = Modifier.fillMaxWidth()
                         )
                         WizardNavRow(
