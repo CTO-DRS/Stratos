@@ -76,6 +76,17 @@ class GoEngine private constructor(
         call("""{"cmd":"metrics.reset"}""")
     }
 
+    override suspend fun accessLog(n: Int): List<AccessEntry> {
+        val res = call("""{"cmd":"log.access","n":${n.coerceIn(1, 128)}}""")
+        if (!res.ok) return emptyList()
+        val lines = res.data?.get("lines") ?: return emptyList()
+        return runCatching {
+            Json.decodeFromJsonElement(
+                kotlinx.serialization.builtins.ListSerializer(AccessEntry.serializer()), lines
+            )
+        }.getOrDefault(emptyList())
+    }
+
     override suspend fun extractZip(zipPath: String, destDir: String): Result<ZipSummary> {
         val res = call(
             """{"cmd":"zip.extract","extra":{"zipPath":"${jsonEscape(zipPath)}","destDir":"${jsonEscape(destDir)}"}}"""

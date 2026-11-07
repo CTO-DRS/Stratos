@@ -45,6 +45,10 @@ type Server struct {
 	// Whole-server HTTP Basic access protection (empty user = disabled).
 	authUser string
 	authPass string
+
+	// Live access log: bounded ring of recently served requests.
+	accessMu sync.Mutex
+	access   []accessEntry
 }
 
 // maxCacheAgeDefault is applied when a site does not set CacheMax.
@@ -230,8 +234,12 @@ func (s *Server) Snapshot() map[string]any {
 	return out
 }
 
-// ResetMetrics zeroes request counters (device metrics are Kotlin-side).
-func (s *Server) ResetMetrics() { s.metrics.Reset() }
+// ResetMetrics zeroes request counters and the live access log
+// (device metrics are Kotlin-side).
+func (s *Server) ResetMetrics() {
+	s.metrics.Reset()
+	s.resetAccess()
+}
 
 // SetAuth hot-applies whole-server HTTP Basic access protection. An empty
 // user disables the wall; comparisons are constant-time.
@@ -243,11 +251,35 @@ func (s *Server) SetAuth(user, pass string) {
 
 // ---- HTTP routing -------------------------------------------------------
 
-// ServeHTTP implements the routing layer:
+// ServeHTTP times the request, captures the response code and byte count
+// through a statusWriter, then hands routing to route(). After the response
+// it records one live access-log entry — except for 401s, which are skipped
+// so Basic-auth negotiation never double-counts each visit.
+func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	started := time.Now()
+	sw := &statusWriter{ResponseWriter: w}
+	s.route(sw, r)
+	if sw.status != http.StatusUnauthorized {
+		status := sw.status
+		if status == 0 {
+			status = http.StatusOK
+		}
+		s.noteAccess(accessEntry{
+			At:     wallClock(),
+			Method: r.Method,
+			Path:   redactPath(r.URL.Path),
+			Status: status,
+			Ms:     time.Since(started).Milliseconds(),
+			Bytes:  sw.bytes,
+		})
+	}
+}
+
+// route is the routing layer:
 //
 //	/            → default site
 //	/s/<id>/...  → secondary site by ID
-func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (s *Server) route(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet && r.Method != http.MethodHead {
 		s.metrics.ActiveOpen()
 		defer s.metrics.ActiveClose()

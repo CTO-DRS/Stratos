@@ -122,6 +122,18 @@ class HostingController(
         }
     }
 
+    /**
+     * Live access-log stream sampled every [periodMs]. Cold flow: a screen
+     * subscribes on composition and stops paying the cost on dispose. The
+     * engine contract returns an empty list when nothing is running.
+     */
+    fun accessLogFlow(periodMs: Long = 1500) = kotlinx.coroutines.flow.flow {
+        while (currentCoroutineContext().isActive) {
+            emit(runCatching { engine.accessLog(60) }.getOrDefault(emptyList()))
+            delay(periodMs)
+        }
+    }
+
     private fun startPolling() {
         pollJob?.cancel()
         pollJob = scope.launch {

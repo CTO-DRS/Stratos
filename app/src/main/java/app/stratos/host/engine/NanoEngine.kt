@@ -31,6 +31,7 @@ class NanoEngine : EngineApi {
     private var server: Inner? = null
     private var sites: List<EngineSite> = emptyList()
     private val metrics = NanoMetrics()
+    private val access = AccessLog()
 
     override val kind = EngineKind.KOTLIN
     override val version = "kotlin/1.0.0"
@@ -41,10 +42,11 @@ class NanoEngine : EngineApi {
                 runCatching {
                     server?.stop()
                     val host = bindHost.ifBlank { "0.0.0.0" }
-                    val s = Inner(host, port, sites.filter { it.enabled }, metrics, auth)
+                    val s = Inner(host, port, sites.filter { it.enabled }, metrics, access, auth)
                     s.start(5000, true)
                     server = s
                     this@NanoEngine.sites = sites.filter { it.enabled }
+                    access.clear() // fresh ring per start, mirroring the Go engine
                     "$host:$port"
                 }
             }
@@ -92,6 +94,14 @@ class NanoEngine : EngineApi {
 
     override suspend fun resetMetrics() {
         metrics.reset()
+        access.clear()
+    }
+
+    override suspend fun accessLog(n: Int): List<AccessEntry> = withContext(Dispatchers.IO) {
+        if (server == null) emptyList()
+        else access.recent(n.coerceIn(1, 128)).map {
+            AccessEntry(at = it.at, method = it.method, path = it.path, status = it.status, ms = it.ms)
+        }
     }
 
     override suspend fun extractZip(zipPath: String, destDir: String): Result<ZipSummary> =
@@ -112,6 +122,7 @@ class NanoEngine : EngineApi {
         port: Int,
         sites: List<EngineSite>,
         val metrics: NanoMetrics,
+        val access: AccessLog,
         auth: AuthConfig?
     ) : NanoHTTPD(host, port) {
 
@@ -140,7 +151,17 @@ class NanoEngine : EngineApi {
                 val denied = checkAuth(session, started)
                 if (denied != null) return denied
                 metrics.notePath(session.uri ?: "/")
-                return route(session, started)
+                val resp = route(session, started)
+                // Live access log: one entry per served request. 401s are
+                // dropped inside AccessLog by policy, and checkAuth already
+                // returned above, so only real answers land here.
+                access.note(
+                    method = session.method.name,
+                    rawPath = session.uri ?: "/",
+                    status = resp.status.requestStatus,
+                    ms = (System.nanoTime() - started) / 1_000_000
+                )
+                return resp
             } finally {
                 metrics.active.decrementAndGet()
             }

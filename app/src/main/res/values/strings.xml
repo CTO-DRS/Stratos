@@ -187,6 +187,11 @@
     <string name="settings_protect_pass_field">password (min 4 characters)</string>
     <string name="settings_protect_enabled">protected</string>
     <string name="settings_protect_off">off</string>
+    <string name="metric_access_log">Request log</string>
+    <string name="metric_access_log_live">live</string>
+    <string name="metric_access_log_empty">No requests served yet.</string>
+    <string name="metric_access_log_offline">Start the server to see live requests.</string>
+    <string name="metric_access_log_showing">Showing the latest %1$d of %2$d</string>
     <string name="metric_top_paths">Top requested paths</string>
     <string name="settings_diagnostics">Diagnostics</string>
     <string name="diag_engine">Engine</string>

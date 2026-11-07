@@ -187,6 +187,11 @@
     <string name="settings_protect_pass_field">parola (en az 4 karakter)</string>
     <string name="settings_protect_enabled">korumalı</string>
     <string name="settings_protect_off">kapalı</string>
+    <string name="metric_access_log">İstek günlüğü</string>
+    <string name="metric_access_log_live">canlı</string>
+    <string name="metric_access_log_empty">Henüz istek karşılanmadı.</string>
+    <string name="metric_access_log_offline">Canlı istekleri görmek için sunucuyu başlatın.</string>
+    <string name="metric_access_log_showing">Son %1$d / %2$d istek gösteriliyor</string>
     <string name="metric_top_paths">En çok istenen yollar</string>
     <string name="settings_diagnostics">Teşhis</string>
     <string name="diag_engine">Motor</string>

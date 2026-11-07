@@ -31,6 +31,9 @@ object Formatters {
     }
 
     fun count(n: Long): String = String.format(Locale.US, "%,d", n)
+
+    /** HH:mm:ss wall-clock time for live access-log rows (device-local). */
+    fun clockTime(epochMs: Long): String = String.format(Locale.US, "%tT", java.util.Date(epochMs))
 }
 
 /** Credential redaction used by Kotlin-side logs (mirrors the Go engine). */

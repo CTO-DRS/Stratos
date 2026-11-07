@@ -149,6 +149,18 @@ func dispatch(request string) string {
 			n = 100
 		}
 		return okResp(map[string]any{"lines": tailLogs(n)})
+	case "log.access":
+		n := req.N
+		if n <= 0 || n > accessRingSize {
+			n = 100
+		}
+		engineMu.Lock()
+		srv := activeServer
+		engineMu.Unlock()
+		if srv == nil {
+			return okResp(map[string]any{"lines": []accessEntry{}})
+		}
+		return okResp(map[string]any{"lines": srv.TailAccess(n)})
 	default:
 		return errResp(fmt.Errorf("unknown command %q", req.Cmd))
 	}

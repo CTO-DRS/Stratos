@@ -35,6 +35,20 @@ data class AuthConfig(val user: String = "", val pass: String = "")
 @Serializable
 data class TopPath(val path: String = "", val count: Long = 0)
 
+/**
+ * One served request in the live access log. Auth-rejected (401) requests are
+ * never recorded; paths are truncated and credential-redacted by both engines
+ * before they enter the ring.
+ */
+@Serializable
+data class AccessEntry(
+    val at: Long = 0, // unix millis
+    val method: String = "GET",
+    val path: String = "/",
+    val status: Int = 0,
+    val ms: Long = 0
+)
+
 /** Live engine status/metrics snapshot (same fields the Go bus reports). */
 @Serializable
 data class EngineStatus(
@@ -79,6 +93,9 @@ interface EngineApi {
     suspend fun setSites(sites: List<EngineSite>, auth: AuthConfig? = null)
 
     suspend fun resetMetrics()
+
+    /** Up to [n] recently served requests, newest first (live access log). */
+    suspend fun accessLog(n: Int = 60): List<AccessEntry>
 
     /** Validates (zip-slip, symlinks, bombs, CRC) then atomically extracts. */
     suspend fun extractZip(zipPath: String, destDir: String): Result<ZipSummary>

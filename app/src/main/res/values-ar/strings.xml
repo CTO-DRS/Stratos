@@ -187,6 +187,11 @@
     <string name="settings_protect_pass_field">كلمة المرور (4 أحرف على الأقل)</string>
     <string name="settings_protect_enabled">محمي</string>
     <string name="settings_protect_off">معطّل</string>
+    <string name="metric_access_log">سجل الطلبات</string>
+    <string name="metric_access_log_live">مباشر</string>
+    <string name="metric_access_log_empty">لم تُخدم أي طلبات بعد.</string>
+    <string name="metric_access_log_offline">شغّل الخادم لمشاهدة الطلبات المباشرة.</string>
+    <string name="metric_access_log_showing">يُعرض أحدث %1$d من %2$d</string>
     <string name="metric_top_paths">أكثر المسارات طلباً</string>
     <string name="settings_diagnostics">تشخيص</string>
     <string name="diag_engine">المحرك</string>

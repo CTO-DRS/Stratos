@@ -51,6 +51,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import app.stratos.host.R
 import app.stratos.host.StratosApp
+import app.stratos.host.engine.AccessEntry
 import app.stratos.host.engine.EngineStatus
 import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
@@ -113,6 +114,12 @@ class MetricsViewModel : ViewModel() {
     }
 
     fun reset() = viewModelScope.launch { graph.controller.resetMetrics() }
+
+    /**
+     * Cold live access-log stream — collected only while the Metrics screen
+     * is composed, so polling cost stops the moment the user leaves the tab.
+     */
+    fun accessLog(periodMs: Long = 1500) = graph.controller.accessLogFlow(periodMs)
 
     private fun sampleDevice(): DeviceMetrics {
         val context = StratosApp.instance
@@ -178,6 +185,7 @@ fun MetricsScreen(nav: NavHostController, vm: MetricsViewModel = viewModel()) {
     val status by vm.status.collectAsState()
     val device by vm.device.collectAsState()
     val rps by vm.rps.collectAsState()
+    val access by vm.accessLog().collectAsState(initial = emptyList())
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -315,6 +323,41 @@ fun MetricsScreen(nav: NavHostController, vm: MetricsViewModel = viewModel()) {
                 }
             }
 
+            // ---- Live request log ----
+            SectionCard(
+                header = {
+                    Text(stringResource(R.string.metric_access_log), style = MaterialTheme.typography.titleSmall)
+                    Spacer(Modifier.weight(1f))
+                    if (status?.running == true) Pill(stringResource(R.string.metric_access_log_live))
+                }
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    when {
+                        status?.running != true -> Text(
+                            stringResource(R.string.metric_access_log_offline),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        access.isEmpty() -> Text(
+                            stringResource(R.string.metric_access_log_empty),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        else -> {
+                            val shown = access.take(20)
+                            shown.forEach { e -> AccessRow(e) }
+                            if (access.size > shown.size) {
+                                Text(
+                                    stringResource(R.string.metric_access_log_showing, shown.size, access.size),
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             // ---- Device (honest telemetry) ----
             SectionCard(
                 header = {
@@ -367,6 +410,42 @@ private fun statusColor(code: String): androidx.compose.ui.graphics.Color = when
     code.startsWith("4") -> StratosColors.Warning
     code.startsWith("5") -> StratosColors.Error
     else -> MaterialThemeColorFallback
+}
+
+/** One live request: status dot + code, method + path, wall-clock time, latency. */
+@Composable
+private fun AccessRow(e: AccessEntry) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        StatusDot(statusColor(e.status.toString()))
+        Text(
+            e.status.toString(),
+            fontFamily = FontFamily.Monospace,
+            style = MaterialTheme.typography.labelMedium
+        )
+        Column(Modifier.weight(1f)) {
+            Text(
+                e.method + " " + e.path,
+                fontFamily = FontFamily.Monospace,
+                style = MaterialTheme.typography.labelMedium,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                Formatters.clockTime(e.at),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+        Text(
+            Formatters.ms(e.ms.toDouble()),
+            style = MaterialTheme.typography.labelMedium,
+            fontFamily = FontFamily.Monospace,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    }
 }
 
 // Non-composable color fallback for status bars drawn outside composition.
