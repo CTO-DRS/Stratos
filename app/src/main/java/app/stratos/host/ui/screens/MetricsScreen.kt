@@ -43,6 +43,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -266,6 +267,45 @@ fun MetricsScreen(nav: NavHostController, vm: MetricsViewModel = viewModel()) {
                                 )
                                 Text(
                                     Formatters.count(n.toLong()),
+                                    style = MaterialTheme.typography.labelMedium,
+                                    fontFamily = FontFamily.Monospace
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ---- Top requested paths ----
+            SectionCard {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.metric_top_paths), style = MaterialTheme.typography.titleSmall)
+                    val topPaths = status?.topPaths.orEmpty()
+                    if (topPaths.isEmpty()) {
+                        Text(
+                            stringResource(R.string.metric_no_data),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        val max = (topPaths.maxOfOrNull { it.count } ?: 1L).coerceAtLeast(1L)
+                        topPaths.forEach { p ->
+                            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                                Text(
+                                    p.path,
+                                    fontFamily = FontFamily.Monospace,
+                                    style = MaterialTheme.typography.labelMedium,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis,
+                                    modifier = Modifier.weight(0.9f)
+                                )
+                                Bar(
+                                    fraction = p.count / max.toFloat(),
+                                    color = StratosColors.Accent,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                Text(
+                                    Formatters.count(p.count),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontFamily = FontFamily.Monospace
                                 )

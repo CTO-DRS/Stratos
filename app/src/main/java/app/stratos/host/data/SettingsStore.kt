@@ -22,6 +22,7 @@ data class Settings(
     val aiModel: String = "glm-4-flash",
     val aiAutoTunnel: Boolean = false,
     val customDomain: String = "",      // empty = none configured
+    val protectUser: String = "",       // Basic-auth username; empty = protection off
     val editorScale: Int = 100,          // editor text size, percent (60–200)
     val editorWrap: Boolean = false,     // soft word-wrap in the code editor
     val onboardingDone: Boolean = false  // splash/welcome/permissions tour finished
@@ -39,6 +40,7 @@ class SettingsStore(private val context: Context) {
         val AI_MODEL = stringPreferencesKey("ai_model")
         val AI_TUNNEL = booleanPreferencesKey("ai_auto_tunnel")
         val CUSTOM_DOMAIN = stringPreferencesKey("custom_domain")
+        val PROTECT_USER = stringPreferencesKey("protect_user")
         val EDITOR_SCALE = intPreferencesKey("editor_scale")
         val EDITOR_WRAP = booleanPreferencesKey("editor_wrap")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
@@ -55,6 +57,7 @@ class SettingsStore(private val context: Context) {
             aiModel = p[K.AI_MODEL] ?: "glm-4-flash",
             aiAutoTunnel = p[K.AI_TUNNEL] ?: false,
             customDomain = p[K.CUSTOM_DOMAIN] ?: "",
+            protectUser = p[K.PROTECT_USER] ?: "",
             editorScale = (p[K.EDITOR_SCALE] ?: 100).coerceIn(60, 200),
             editorWrap = p[K.EDITOR_WRAP] ?: false,
             onboardingDone = p[K.ONBOARDING_DONE] ?: false
@@ -70,6 +73,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setAiModel(v: String) = context.dataStore.edit { it[K.AI_MODEL] = v }
     suspend fun setAiAutoTunnel(v: Boolean) = context.dataStore.edit { it[K.AI_TUNNEL] = v }
     suspend fun setCustomDomain(v: String) = context.dataStore.edit { it[K.CUSTOM_DOMAIN] = v.trim() }
+    suspend fun setProtectUser(v: String) = context.dataStore.edit { it[K.PROTECT_USER] = v.trim() }
     suspend fun setEditorScale(v: Int) = context.dataStore.edit { it[K.EDITOR_SCALE] = v.coerceIn(60, 200) }
     suspend fun setEditorWrap(v: Boolean) = context.dataStore.edit { it[K.EDITOR_WRAP] = v }
     suspend fun setOnboardingDone(v: Boolean) = context.dataStore.edit { it[K.ONBOARDING_DONE] = v }

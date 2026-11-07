@@ -11,6 +11,16 @@ import (
 // (a fixed ring; oldest samples are dropped).
 const maxLatencySamples = 8192
 
+// maxTrackedPaths bounds the per-path counter map; on overflow the least
+// requested tracked path is evicted before a new one is admitted.
+const maxTrackedPaths = 64
+
+// topPathsReported is how many hot paths the status snapshot reports.
+const topPathsReported = 8
+
+// maxTrackedPathLen caps a single tracked path's length.
+const maxTrackedPathLen = 128
+
 // Metrics collects honest request telemetry for the dashboard.
 // Everything is real, measured in-process; nothing is extrapolated.
 type Metrics struct {
@@ -20,6 +30,7 @@ type Metrics struct {
 
 	mu        sync.Mutex
 	byStatus  map[int]int64
+	paths     map[string]int64
 	latencies []float64 // milliseconds; ring capped at maxLatencySamples
 	started   time.Time
 }
@@ -28,6 +39,7 @@ type Metrics struct {
 func NewMetrics() *Metrics {
 	return &Metrics{
 		byStatus: make(map[int]int64),
+		paths:    make(map[string]int64),
 		started:  time.Now(),
 	}
 }
@@ -54,6 +66,60 @@ func (m *Metrics) Record(status int, latency time.Duration, bytes int64) {
 		m.latencies = append(m.latencies, float64(latency.Microseconds())/1000.0)
 	}
 	m.mu.Unlock()
+}
+
+// NotePath counts one request toward a URL path. The map is bounded: when it
+// is full and a brand-new path arrives, the least-requested tracked path is
+// evicted first, so long-tail scanners cannot grow memory without limit.
+func (m *Metrics) NotePath(p string) {
+	if len(p) > maxTrackedPathLen {
+		p = p[:maxTrackedPathLen]
+	}
+	m.mu.Lock()
+	if m.paths == nil {
+		m.paths = make(map[string]int64)
+	}
+	if _, exists := m.paths[p]; !exists && len(m.paths) >= maxTrackedPaths {
+		var minKey string
+		var minVal int64 = -1
+		for k, v := range m.paths {
+			if minVal < 0 || v < minVal {
+				minKey, minVal = k, v
+			}
+		}
+		if minKey != "" {
+			delete(m.paths, minKey)
+		}
+	}
+	m.paths[p]++
+	m.mu.Unlock()
+}
+
+// PathCount is one entry of the top-requested-paths report.
+type PathCount struct {
+	Path  string `json:"path"`
+	Count int64  `json:"count"`
+}
+
+// TopPaths returns up to n most-requested paths, hottest first (ties broken
+// alphabetically for deterministic output).
+func (m *Metrics) TopPaths(n int) []PathCount {
+	m.mu.Lock()
+	out := make([]PathCount, 0, len(m.paths))
+	for k, v := range m.paths {
+		out = append(out, PathCount{Path: k, Count: v})
+	}
+	m.mu.Unlock()
+	sort.Slice(out, func(i, j int) bool {
+		if out[i].Count != out[j].Count {
+			return out[i].Count > out[j].Count
+		}
+		return out[i].Path < out[j].Path
+	})
+	if len(out) > n {
+		out = out[:n]
+	}
+	return out
 }
 
 // MetricsSnapshot is the JSON-friendly view of the counters.
@@ -91,6 +157,7 @@ func (m *Metrics) Snapshot() map[string]any {
 		"active":    m.active.Load(),
 		"bytesOut":  m.bytesOut.Load(),
 		"byStatus":  status,
+		"topPaths":  m.TopPaths(topPathsReported),
 		"p50Ms":     p50,
 		"p95Ms":     p95,
 		"maxMs":     maxMs,
@@ -104,6 +171,7 @@ func (m *Metrics) Reset() {
 	m.bytesOut.Store(0)
 	m.mu.Lock()
 	m.byStatus = make(map[int]int64)
+	m.paths = make(map[string]int64)
 	m.latencies = m.latencies[:0]
 	m.mu.Unlock()
 }

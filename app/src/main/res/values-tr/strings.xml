@@ -172,6 +172,17 @@
     <string name="settings_ai_key_title">AI API anahtarı</string>
     <string name="settings_ai_key_body">Yalnızca bu cihazda Android Keystore AES-256-GCM ile saklanır — yüklenmez, günlüğe yazılmaz, tekrar gösterilmez.</string>
     <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_protect">Erişim koruması</string>
+    <string name="settings_protect_user">Kullanıcı adı</string>
+    <string name="settings_protect_hint">Sunucunun tamamını HTTP Basic kimlik doğrulamasıyla koruyun — her ziyaretçiden kullanıcı adı ve parola istenir. Parola Keystore kasasında mühürlenir ve koruma yeniden başlatmaya gerek kalmadan anında uygulanır.</string>
+    <string name="settings_protect_pass_add">Parola ekle</string>
+    <string name="settings_protect_pass_change">Parolayı değiştir</string>
+    <string name="settings_protect_pass_title">Site parolası</string>
+    <string name="settings_protect_pass_body">Yalnızca HTTP Basic kimlik doğrulamasıyla gönderilir. Bu cihazda Android Keystore AES-256-GCM ile mühürlenir — asla yüklenmez, bir daha gösterilmez.</string>
+    <string name="settings_protect_pass_field">parola (en az 4 karakter)</string>
+    <string name="settings_protect_enabled">korumalı</string>
+    <string name="settings_protect_off">kapalı</string>
+    <string name="metric_top_paths">En çok istenen yollar</string>
     <string name="settings_diagnostics">Teşhis</string>
     <string name="diag_engine">Motor</string>
     <string name="diag_lan">LAN adresi</string>

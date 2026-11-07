@@ -2,6 +2,7 @@ package engine
 
 import (
 	"context"
+	"crypto/subtle"
 	"errors"
 	"fmt"
 	"net"
@@ -40,6 +41,10 @@ type Server struct {
 	addr     string
 	started  time.Time
 	metrics  *Metrics
+
+	// Whole-server HTTP Basic access protection (empty user = disabled).
+	authUser string
+	authPass string
 }
 
 // maxCacheAgeDefault is applied when a site does not set CacheMax.
@@ -228,6 +233,14 @@ func (s *Server) Snapshot() map[string]any {
 // ResetMetrics zeroes request counters (device metrics are Kotlin-side).
 func (s *Server) ResetMetrics() { s.metrics.Reset() }
 
+// SetAuth hot-applies whole-server HTTP Basic access protection. An empty
+// user disables the wall; comparisons are constant-time.
+func (s *Server) SetAuth(user, pass string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.authUser, s.authPass = user, pass
+}
+
 // ---- HTTP routing -------------------------------------------------------
 
 // ServeHTTP implements the routing layer:
@@ -249,7 +262,14 @@ func (s *Server) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Access protection: every request sits behind the credential wall
+	// whenever one is configured.
+	if !s.checkAuth(w, r) {
+		return
+	}
+
 	urlPath := r.URL.Path // net/http already decodes %XX
+	s.metrics.NotePath(urlPath)
 	var target *site
 	var rel string
 
@@ -322,6 +342,32 @@ func (s *Server) notFound(w http.ResponseWriter, r *http.Request, kind string) {
 		_, _ = w.Write([]byte(errorPage(http.StatusNotFound, "404 — Not Found", msg)))
 	}
 	s.metrics.Record(http.StatusNotFound, 0, 0)
+}
+
+// checkAuth enforces the optional Basic-auth wall. With no user configured
+// it is a no-op. Failures answer 401 with a branded page and a challenge.
+func (s *Server) checkAuth(w http.ResponseWriter, r *http.Request) bool {
+	s.mu.RLock()
+	user, pass := s.authUser, s.authPass
+	s.mu.RUnlock()
+	if user == "" {
+		return true
+	}
+	if u, p, ok := r.BasicAuth(); ok &&
+		subtle.ConstantTimeCompare([]byte(u), []byte(user)) == 1 &&
+		subtle.ConstantTimeCompare([]byte(p), []byte(pass)) == 1 {
+		return true
+	}
+	w.Header().Set("WWW-Authenticate", `Basic realm="Stratos", charset="UTF-8"`)
+	w.Header().Set("Content-Type", "text/html; charset=utf-8")
+	w.Header().Set("Cache-Control", "no-cache")
+	w.WriteHeader(http.StatusUnauthorized)
+	if r.Method != http.MethodHead {
+		_, _ = w.Write([]byte(errorPage(http.StatusUnauthorized, "401 — Unauthorized",
+			"This server is protected. Enter the username and password set in Stratos.")))
+	}
+	s.metrics.Record(http.StatusUnauthorized, 0, 0)
+	return false
 }
 
 // defID returns the current default site id (or "").

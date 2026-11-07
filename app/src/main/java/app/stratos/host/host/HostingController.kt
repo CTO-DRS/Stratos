@@ -1,10 +1,13 @@
 package app.stratos.host.host
 
+import app.stratos.host.data.Settings
 import app.stratos.host.data.SettingsStore
 import app.stratos.host.data.SitesRepository
+import app.stratos.host.engine.AuthConfig
 import app.stratos.host.engine.EngineApi
 import app.stratos.host.engine.EngineKind
 import app.stratos.host.engine.EngineStatus
+import app.stratos.host.security.Vault
 import app.stratos.host.util.NetUtils
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -28,6 +31,9 @@ sealed interface HostState {
     data class Failed(val reason: String) : HostState
 }
 
+/** Vault key holding the site access-protection password (AES-256-GCM sealed). */
+private const val SITE_AUTH_PASS_KEY = "site_auth_pass"
+
 /**
  * Orchestrates start/stop of the embedded engine with the site registry from
  * the repository. One instance per process (owned by AppGraph); the foreground
@@ -36,7 +42,8 @@ sealed interface HostState {
 class HostingController(
     private val engine: EngineApi,
     private val repository: SitesRepository,
-    private val settings: SettingsStore
+    private val settings: SettingsStore,
+    private val vault: Vault
 ) {
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -60,7 +67,7 @@ class HostingController(
             val bind = if (s.bindAll) "0.0.0.0" else "127.0.0.1"
             val port = if (s.port in 1024..65535) s.port else 8080
 
-            engine.start(bind, port, sites).getOrThrow()
+            engine.start(bind, port, sites, protectionAuth(s)).getOrThrow()
 
             val lanIp = NetUtils.lanIp()
             HostState.Running(
@@ -87,8 +94,21 @@ class HostingController(
 
     suspend fun reloadSites() {
         if (_state.value is HostState.Running) {
-            engine.setSites(repository.engineSites())
+            val s = settings.settings.first()
+            engine.setSites(repository.engineSites(), protectionAuth(s))
         }
+    }
+
+    /**
+     * Whole-server Basic auth from settings + vault. An empty username or a
+     * missing sealed password means protection is disabled (null auth).
+     */
+    private fun protectionAuth(s: Settings): AuthConfig? {
+        val user = s.protectUser.trim()
+        if (user.isEmpty()) return null
+        val pass = runCatching { vault.get(SITE_AUTH_PASS_KEY) }.getOrNull() ?: return null
+        if (pass.isEmpty()) return null
+        return AuthConfig(user, String(pass))
     }
 
     suspend fun resetMetrics() = engine.resetMetrics()

@@ -3,6 +3,7 @@ package engine
 import (
 	"bytes"
 	"compress/gzip"
+	"encoding/base64"
 	"io"
 	"net/http"
 	"os"
@@ -282,6 +283,74 @@ func activeServerForTest(t *testing.T) *Server {
 		t.Fatal("no active server")
 	}
 	return activeServer
+}
+
+func TestBasicAuth(t *testing.T) {
+	base, _, stop := newTestServer(t, false)
+	defer stop()
+
+	// No auth configured: open access.
+	resp, _ := get(t, base+"/", nil)
+	if resp.StatusCode != 200 {
+		t.Fatalf("want 200 without auth, got %d", resp.StatusCode)
+	}
+
+	srv := activeServerForTest(t)
+	srv.SetAuth("user", "s3cret")
+
+	// Missing credentials: 401 + challenge.
+	resp, body := get(t, base+"/", nil)
+	if resp.StatusCode != 401 {
+		t.Fatalf("want 401, got %d", resp.StatusCode)
+	}
+	if resp.Header.Get("WWW-Authenticate") == "" {
+		t.Fatal("missing WWW-Authenticate challenge")
+	}
+	if !strings.Contains(body, "401") {
+		t.Fatalf("unexpected body: %q", body)
+	}
+
+	// Wrong password: still 401.
+	wrong := base64.StdEncoding.EncodeToString([]byte("user:nope"))
+	resp, _ = get(t, base+"/", map[string]string{"Authorization": "Basic " + wrong})
+	if resp.StatusCode != 401 {
+		t.Fatalf("want 401 for wrong password, got %d", resp.StatusCode)
+	}
+
+	// Correct credentials: 200 and the real page.
+	good := base64.StdEncoding.EncodeToString([]byte("user:s3cret"))
+	resp, body = get(t, base+"/", map[string]string{"Authorization": "Basic " + good})
+	if resp.StatusCode != 200 {
+		t.Fatalf("want 200 with credentials, got %d", resp.StatusCode)
+	}
+	if !strings.Contains(body, "Main Home") {
+		t.Fatalf("unexpected body: %q", body)
+	}
+}
+
+func TestTopPaths(t *testing.T) {
+	base, _, stop := newTestServer(t, false)
+	defer stop()
+
+	_, _ = get(t, base+"/", nil)
+	_, _ = get(t, base+"/", nil)
+	_, _ = get(t, base+"/about.html", nil)
+
+	srv := activeServerForTest(t)
+	top := srv.metrics.TopPaths(8)
+	if len(top) == 0 {
+		t.Fatal("no tracked paths")
+	}
+	if top[0].Path != "/" || top[0].Count < 2 {
+		t.Fatalf("unexpected hottest path: %+v", top[0])
+	}
+	if top[1].Path != "/about.html" || top[1].Count != 1 {
+		t.Fatalf("unexpected second path: %+v", top[1])
+	}
+	snap := srv.Snapshot()
+	if _, ok := snap["topPaths"].([]PathCount); !ok {
+		t.Fatalf("snapshot topPaths has wrong type: %T", snap["topPaths"])
+	}
 }
 
 func TestPercentilesMonotonic(t *testing.T) {

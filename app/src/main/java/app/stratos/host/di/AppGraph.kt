@@ -33,7 +33,7 @@ class AppGraph(private val context: Context) {
 
     val repository by lazy { SitesRepository(context, siteDao, engine) }
 
-    val controller by lazy { HostingController(engine, repository, settings) }
+    val controller by lazy { HostingController(engine, repository, settings, vault) }
 
     val tunnel by lazy { TunnelManager(context, vault, settings) }
 }

@@ -18,6 +18,13 @@ type siteConfigJSON struct {
 	CacheMax int    `json:"cacheMax,omitempty"` // seconds for immutable assets; 0 = default policy
 }
 
+// authWire carries optional whole-server Basic-auth credentials on the
+// start / sites.set commands. A nil auth means "keep current behaviour".
+type authWire struct {
+	User string `json:"user"`
+	Pass string `json:"pass"`
+}
+
 type busRequest struct {
 	Cmd   string            `json:"cmd"`
 	Port  int               `json:"port,omitempty"`
@@ -25,6 +32,7 @@ type busRequest struct {
 	Sites []siteConfigJSON  `json:"sites,omitempty"`
 	N     int               `json:"n,omitempty"`
 	Extra map[string]string `json:"extra,omitempty"`
+	Auth  *authWire         `json:"auth,omitempty"`
 }
 
 type busResponse struct {
@@ -73,6 +81,9 @@ func dispatch(request string) string {
 		if err != nil {
 			return errResp(err)
 		}
+		if req.Auth != nil {
+			srv.SetAuth(req.Auth.User, req.Auth.Pass)
+		}
 		if err := srv.Start(); err != nil {
 			return errResp(err)
 		}
@@ -106,6 +117,9 @@ func dispatch(request string) string {
 			return errResp(fmt.Errorf("engine not running"))
 		}
 		srv.SetSites(fromWire(req.Sites))
+		if req.Auth != nil {
+			srv.SetAuth(req.Auth.User, req.Auth.Pass)
+		}
 		return okResp(map[string]any{"reloaded": len(req.Sites)})
 	case "metrics.reset":
 		engineMu.Lock()

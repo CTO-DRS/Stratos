@@ -172,6 +172,17 @@
     <string name="settings_ai_key_title">مفتاح AI</string>
     <string name="settings_ai_key_body">يُخزَّن بتشفير Android Keystore AES-256-GCM على هذا الجهاز فقط — لا يُرفع ولا يُسجَّل ولا يُعرض مجدداً.</string>
     <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_protect">حماية الوصول</string>
+    <string name="settings_protect_user">اسم المستخدم</string>
+    <string name="settings_protect_hint">احمِ الخادم بالكامل بمصادقة HTTP Basic — يُطلب من كل زائر اسم المستخدم وكلمة المرور. تُختم كلمة المرور في خزنة Keystore وتُطبَّق الحماية فوراً دون إعادة تشغيل.</string>
+    <string name="settings_protect_pass_add">إضافة كلمة المرور</string>
+    <string name="settings_protect_pass_change">تغيير كلمة المرور</string>
+    <string name="settings_protect_pass_title">كلمة مرور الموقع</string>
+    <string name="settings_protect_pass_body">تُرسل بمصادقة HTTP Basic فقط. تُختم بتشفير Android Keystore AES-256-GCM على هذا الجهاز — لا تُرفع أبداً ولا تُعرض مجدداً.</string>
+    <string name="settings_protect_pass_field">كلمة المرور (4 أحرف على الأقل)</string>
+    <string name="settings_protect_enabled">محمي</string>
+    <string name="settings_protect_off">معطّل</string>
+    <string name="metric_top_paths">أكثر المسارات طلباً</string>
     <string name="settings_diagnostics">تشخيص</string>
     <string name="diag_engine">المحرك</string>
     <string name="diag_lan">عنوان الشبكة المحلية</string>

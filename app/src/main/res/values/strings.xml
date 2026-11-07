@@ -172,6 +172,17 @@
     <string name="settings_ai_key_title">AI API key</string>
     <string name="settings_ai_key_body">Stored with Android Keystore AES-256-GCM on this device only — never uploaded, never logged, never shown again.</string>
     <string name="settings_ai_key_field">sk-…</string>
+    <string name="settings_protect">Access protection</string>
+    <string name="settings_protect_user">Username</string>
+    <string name="settings_protect_hint">Protect the whole server with HTTP Basic auth — every visitor is asked for the username and password. The password is sealed in the Keystore vault and protection applies live, no restart needed.</string>
+    <string name="settings_protect_pass_add">Add password</string>
+    <string name="settings_protect_pass_change">Change password</string>
+    <string name="settings_protect_pass_title">Site password</string>
+    <string name="settings_protect_pass_body">Sent as HTTP Basic auth only. Sealed with Android Keystore AES-256-GCM on this device — never uploaded, never shown again.</string>
+    <string name="settings_protect_pass_field">password (min 4 characters)</string>
+    <string name="settings_protect_enabled">protected</string>
+    <string name="settings_protect_off">off</string>
+    <string name="metric_top_paths">Top requested paths</string>
     <string name="settings_diagnostics">Diagnostics</string>
     <string name="diag_engine">Engine</string>
     <string name="diag_lan">LAN address</string>

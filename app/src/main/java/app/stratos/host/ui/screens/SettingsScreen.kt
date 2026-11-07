@@ -52,6 +52,8 @@ import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.theme.StratosColors
 import app.stratos.host.util.NetUtils
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
@@ -66,6 +68,10 @@ class SettingsViewModel : ViewModel() {
     val cloudflaredPresent = graph.tunnel.isBinaryPresent()
     val lanIp = NetUtils.lanIp() ?: "—"
     val aiKeySaved = StratosApp.instance.graph.vault.has("ai_api_key")
+
+    /** Site access-protection password present in the vault (live-updated). */
+    private val _authSaved = MutableStateFlow(graph.vault.has("site_auth_pass"))
+    val authSaved: StateFlow<Boolean> = _authSaved.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -91,6 +97,21 @@ class SettingsViewModel : ViewModel() {
         else graph.vault.put("ai_api_key", key.toCharArray())
     }
 
+    /** Saves the Basic-auth username and hot-applies protection if hosting. */
+    fun saveProtectAndReload(user: String) = viewModelScope.launch {
+        graph.settings.setProtectUser(user)
+        _settings.value = graph.settings.settings.first()
+        graph.controller.reloadSites()
+    }
+
+    /** Saves the sealed password (blank = remove) and hot-applies protection. */
+    fun saveAuthPassAndReload(pass: String) = viewModelScope.launch {
+        if (pass.isBlank()) graph.vault.remove("site_auth_pass")
+        else graph.vault.put("site_auth_pass", pass.toCharArray())
+        _authSaved.value = graph.vault.has("site_auth_pass")
+        graph.controller.reloadSites()
+    }
+
     fun replayIntro() = save { it.setOnboardingDone(false) }
 
     fun reloadIfRunning() = viewModelScope.launch {
@@ -108,6 +129,8 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
     var aiEndpoint by remember(settings.aiEndpoint) { mutableStateOf(settings.aiEndpoint) }
     var aiModel by remember(settings.aiModel) { mutableStateOf(settings.aiModel) }
     var keyDialog by remember { mutableStateOf(false) }
+    var passDialog by remember { mutableStateOf(false) }
+    val authSaved by vm.authSaved.collectAsState()
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -182,6 +205,47 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
                             onClick = { vm.saveSpa(false); vm.reloadIfRunning() },
                             label = { Text(stringResource(R.string.off)) }
                         )
+                    }
+                }
+            }
+
+            // ---- Access protection ----
+            SectionCard(
+                header = {
+                    Text(stringResource(R.string.settings_protect), style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.weight(1f))
+                    val authOn = authSaved && settings.protectUser.isNotBlank()
+                    Pill(
+                        stringResource(if (authOn) R.string.settings_protect_enabled else R.string.settings_protect_off),
+                        if (authOn) StratosColors.SuccessSoft else MaterialTheme.colorScheme.surfaceVariant,
+                        if (authOn) StratosColors.Success else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    var protectUser by remember(settings.protectUser) { mutableStateOf(settings.protectUser) }
+                    OutlinedTextField(
+                        value = protectUser,
+                        onValueChange = { protectUser = it },
+                        label = { Text(stringResource(R.string.settings_protect_user)) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                    Text(
+                        stringResource(R.string.settings_protect_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(onClick = { vm.saveProtectAndReload(protectUser) }) {
+                            Text(stringResource(R.string.apply))
+                        }
+                        OutlinedButton(onClick = { passDialog = true }) {
+                            Text(
+                                if (authSaved) stringResource(R.string.settings_protect_pass_change)
+                                else stringResource(R.string.settings_protect_pass_add)
+                            )
+                        }
                     }
                 }
             }
@@ -299,6 +363,42 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
             }
             Spacer(Modifier.height(10.dp))
         }
+    }
+
+    if (passDialog) {
+        var pass by remember { mutableStateOf("") }
+        AlertDialog(
+            onDismissRequest = { passDialog = false },
+            title = { Text(stringResource(R.string.settings_protect_pass_title)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Text(stringResource(R.string.settings_protect_pass_body), style = MaterialTheme.typography.bodySmall)
+                    OutlinedTextField(
+                        pass, { pass = it },
+                        label = { Text(stringResource(R.string.settings_protect_pass_field)) },
+                        singleLine = true,
+                        visualTransformation = androidx.compose.ui.text.input.PasswordVisualTransformation(),
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = { vm.saveAuthPassAndReload(pass); passDialog = false },
+                    enabled = pass.length >= 4
+                ) { Text(stringResource(R.string.save)) }
+            },
+            dismissButton = {
+                Row {
+                    if (authSaved) {
+                        TextButton(onClick = { vm.saveAuthPassAndReload(""); passDialog = false }) {
+                            Text(stringResource(R.string.tunnel_token_clear), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                    TextButton(onClick = { passDialog = false }) { Text(stringResource(R.string.cancel)) }
+                }
+            }
+        )
     }
 
     if (keyDialog) {

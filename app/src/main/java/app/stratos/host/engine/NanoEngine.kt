@@ -11,6 +11,7 @@ import java.io.ByteArrayInputStream
 import java.io.File
 import java.io.FileInputStream
 import java.io.RandomAccessFile
+import java.security.MessageDigest
 import java.util.zip.GZIPOutputStream
 import java.io.ByteArrayOutputStream
 
@@ -33,13 +34,13 @@ class NanoEngine : EngineApi {
     override val kind = EngineKind.KOTLIN
     override val version = "kotlin/1.0.0"
 
-    override suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>): Result<String> =
+    override suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>, auth: AuthConfig?): Result<String> =
         withContext(Dispatchers.IO) {
             mutex.withLock {
                 runCatching {
                     server?.stop()
                     val host = bindHost.ifBlank { "0.0.0.0" }
-                    val s = Inner(host, port, sites.filter { it.enabled }, metrics)
+                    val s = Inner(host, port, sites.filter { it.enabled }, metrics, auth)
                     s.start(5000, true)
                     server = s
                     this@NanoEngine.sites = sites.filter { it.enabled }
@@ -74,15 +75,17 @@ class NanoEngine : EngineApi {
                 maxMs = metrics.maxMs,
                 uptimeSec = metrics.uptimeSec(),
                 sites = sites.size,
-                defaultSite = sites.firstOrNull { it.isDefault }?.id ?: ""
+                defaultSite = sites.firstOrNull { it.isDefault }?.id ?: "",
+                topPaths = metrics.topPaths(8)
             )
         }
     }
 
-    override suspend fun setSites(sites: List<EngineSite>) {
+    override suspend fun setSites(sites: List<EngineSite>, auth: AuthConfig?) {
         mutex.withLock {
             this.sites = sites.filter { it.enabled }
             server?.replaceSites(this.sites)
+            server?.replaceAuth(auth)
         }
     }
 
@@ -107,26 +110,75 @@ class NanoEngine : EngineApi {
         host: String,
         port: Int,
         sites: List<EngineSite>,
-        val metrics: NanoMetrics
+        val metrics: NanoMetrics,
+        auth: AuthConfig?
     ) : NanoHTTPD(host, port) {
 
         private val lock = Any()
         private var registry: List<EngineSite> = sites
         private var def: EngineSite? = sites.firstOrNull { it.isDefault }
 
+        // Whole-server Basic-auth wall (empty user = disabled).
+        private var authUser: String = auth?.user?.trim().orEmpty()
+        private var authPass: String = auth?.pass.orEmpty()
+
         fun replaceSites(sites: List<EngineSite>) = synchronized(lock) {
             registry = sites
             def = sites.firstOrNull { it.isDefault }
+        }
+
+        fun replaceAuth(auth: AuthConfig?) = synchronized(lock) {
+            authUser = auth?.user?.trim().orEmpty()
+            authPass = auth?.pass.orEmpty()
         }
 
         override fun serve(session: IHTTPSession): Response {
             val started = System.nanoTime()
             metrics.active.incrementAndGet()
             try {
+                val denied = checkAuth(session, started)
+                if (denied != null) return denied
+                metrics.notePath(session.uri ?: "/")
                 return route(session, started)
             } finally {
                 metrics.active.decrementAndGet()
             }
+        }
+
+        /**
+         * Optional HTTP Basic wall. Returns null to proceed, or a ready-made
+         * 401 response with the challenge header. Comparisons are constant-time.
+         */
+        private fun checkAuth(session: IHTTPSession, started: Long): Response? {
+            val (user, pass) = synchronized(lock) { authUser to authPass }
+            if (user.isEmpty()) return null
+            val header = session.headers["authorization"] ?: ""
+            val provided = runCatching {
+                if (!header.startsWith("Basic ", ignoreCase = true)) null
+                else String(
+                    java.util.Base64.getDecoder().decode(header.substring(6).trim()),
+                    Charsets.UTF_8
+                )
+            }.getOrNull() ?: ""
+            val sep = provided.indexOf(':')
+            val gotUser = if (sep < 0) provided else provided.substring(0, sep)
+            val gotPass = if (sep < 0) "" else provided.substring(sep + 1)
+            val userOk = MessageDigest.isEqual(
+                gotUser.toByteArray(Charsets.UTF_8), user.toByteArray(Charsets.UTF_8)
+            )
+            val passOk = MessageDigest.isEqual(
+                gotPass.toByteArray(Charsets.UTF_8), pass.toByteArray(Charsets.UTF_8)
+            )
+            if (userOk && passOk) return null
+
+            metrics.record(401, started, 0)
+            val resp = respondPage(
+                Status.UNAUTHORIZED, session, "401 — Unauthorized",
+                "This server is protected. Enter the username and password set in Stratos."
+            )
+            resp.addHeader("WWW-Authenticate", "Basic realm=\"Stratos\", charset=\"UTF-8\"")
+            resp.addHeader("Cache-Control", "no-cache")
+            return resp
         }
 
         private fun route(session: IHTTPSession, started: Long): Response {
@@ -317,6 +369,25 @@ internal class NanoMetrics {
 
     fun markStopped() { startedAt = System.currentTimeMillis() }
 
+    // ---- per-path counters (bounded) ----------------------------------------
+
+    private val pathMap = java.util.concurrent.ConcurrentHashMap<String, Long>()
+
+    /** Counts one request toward a URL path; bounded at 64 tracked paths. */
+    fun notePath(rawPath: String) {
+        val p = if (rawPath.length > 128) rawPath.take(128) else rawPath
+        if (pathMap.size >= 64 && !pathMap.containsKey(p)) {
+            pathMap.entries.minByOrNull { it.value }?.let { pathMap.remove(it.key) }
+        }
+        pathMap.merge(p, 1L, Long::plus)
+    }
+
+    /** Up to [n] hottest paths, ties broken alphabetically for stability. */
+    fun topPaths(n: Int): List<TopPath> = pathMap.entries
+        .sortedWith(compareByDescending<Map.Entry<String, Long>> { it.value }.thenBy { it.key })
+        .take(n)
+        .map { TopPath(it.key, it.value) }
+
     fun byStatusSnapshot(): Map<String, Int> =
         statusMap.entries.associate { it.key to it.value.toInt() }
 
@@ -338,6 +409,7 @@ internal class NanoMetrics {
 
     fun reset() {
         requests.set(0); bytesOut.set(0); statusMap.clear()
+        pathMap.clear()
         synchronized(latLock) { latencies.clear() }
         startedAt = System.currentTimeMillis()
     }

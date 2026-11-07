@@ -24,6 +24,17 @@ data class EngineSite(
     val cacheMax: Int = 0
 )
 
+/**
+ * Optional whole-server access protection (HTTP Basic). The username travels
+ * in settings; the password lives sealed in the Keystore vault and is only
+ * ever handed to the engine in memory.
+ */
+data class AuthConfig(val user: String = "", val pass: String = "")
+
+/** One top-requested path in the metrics snapshot. */
+@Serializable
+data class TopPath(val path: String = "", val count: Long = 0)
+
 /** Live engine status/metrics snapshot (same fields the Go bus reports). */
 @Serializable
 data class EngineStatus(
@@ -38,7 +49,8 @@ data class EngineStatus(
     val maxMs: Double = 0.0,
     val uptimeSec: Double = 0.0,
     val sites: Int = 0,
-    val defaultSite: String = ""
+    val defaultSite: String = "",
+    val topPaths: List<TopPath> = emptyList()
 )
 
 /** Result summary of a validated ZIP extraction. */
@@ -58,13 +70,13 @@ interface EngineApi {
     val version: String
 
     /** @return the listening address, e.g. "0.0.0.0:8080". */
-    suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>): Result<String>
+    suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>, auth: AuthConfig? = null): Result<String>
 
     suspend fun stop()
 
     suspend fun status(): EngineStatus?
 
-    suspend fun setSites(sites: List<EngineSite>)
+    suspend fun setSites(sites: List<EngineSite>, auth: AuthConfig? = null)
 
     suspend fun resetMetrics()
 

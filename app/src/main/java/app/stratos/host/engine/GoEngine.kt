@@ -46,10 +46,10 @@ class GoEngine private constructor(
         parse(raw)
     }
 
-    override suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>): Result<String> {
+    override suspend fun start(bindHost: String, port: Int, sites: List<EngineSite>, auth: AuthConfig?): Result<String> {
         val sitesJson = Json.encodeToString(SITES_SERIALIZER, sites)
         val res = call(
-            """{"cmd":"start","port":$port,"bind":"$bindHost","sites":$sitesJson}"""
+            """{"cmd":"start","port":$port,"bind":"$bindHost"${authFragment(auth)},"sites":$sitesJson}"""
         )
         return if (res.ok) Result.success(res.data?.get("addr")?.jsonPrimitive?.content ?: "")
         else Result.failure(IllegalStateException(res.error))
@@ -67,9 +67,9 @@ class GoEngine private constructor(
         }.getOrNull()
     }
 
-    override suspend fun setSites(sites: List<EngineSite>) {
+    override suspend fun setSites(sites: List<EngineSite>, auth: AuthConfig?) {
         val sitesJson = Json.encodeToString(SITES_SERIALIZER, sites)
-        call("""{"cmd":"sites.set","sites":$sitesJson}""")
+        call("""{"cmd":"sites.set","sites":$sitesJson${authFragment(auth)}}""")
     }
 
     override suspend fun resetMetrics() {
@@ -99,6 +99,19 @@ class GoEngine private constructor(
 
     private fun jsonEscape(s: String): String =
         s.replace("\\", "\\\\").replace("\"", "\\\"")
+            .replace("\n", "\\n").replace("\r", "\\r").replace("\t", "\\t")
+
+    /**
+     * Bus fragment carrying optional Basic-auth credentials. Blank user or
+     * empty pass means disabled — the fragment is omitted entirely so the
+     * engine keeps its current behaviour (nil auth on the Go side).
+     */
+    private fun authFragment(auth: AuthConfig?): String {
+        if (auth == null) return ""
+        val user = auth.user.trim()
+        if (user.isEmpty() || auth.pass.isEmpty()) return ""
+        return ",\"auth\":{\"user\":\"" + jsonEscape(user) + "\",\"pass\":\"" + jsonEscape(auth.pass) + "\"}"
+    }
 
     companion object {
         private val SITES_SERIALIZER =
