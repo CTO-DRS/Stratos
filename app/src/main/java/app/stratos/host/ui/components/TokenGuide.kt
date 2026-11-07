@@ -24,9 +24,12 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.Help
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.OpenInBrowser
+import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -43,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,6 +59,17 @@ import app.stratos.host.ui.theme.stratosIsDark
 
 /** Cloudflare Zero Trust Tunnels console — where the named-tunnel token is minted. */
 private const val CF_ZERO_TRUST_URL = "https://one.dash.cloudflare.com/?tab=tunnels"
+
+/** Official dashboard guide with the embedded video walkthrough of the exact flow. */
+private const val CF_DOC_VIDEO_URL =
+    "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/get-started/create-remote-tunnel/"
+
+/** Official 5-minute quick start. */
+private const val CF_DOC_QUICKSTART_URL = "https://developers.cloudflare.com/tunnel/get-started/"
+
+/** Official Cloudflare Tunnel documentation overview. */
+private const val CF_DOC_OVERVIEW_URL =
+    "https://developers.cloudflare.com/cloudflare-one/networks/connectors/cloudflare-tunnel/"
 
 private const val INSTALL_COMMAND_SAMPLE = "cloudflared service install eyJ…"
 
@@ -184,6 +199,28 @@ fun TokenGuideCard(modifier: Modifier = Modifier) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
+
+                // ---- illustrated guides ---------------------------------------
+                Text(
+                    stringResource(R.string.token_guide_media_title),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                GuideLink(
+                    text = stringResource(R.string.token_guide_link_video),
+                    url = CF_DOC_VIDEO_URL,
+                    icon = Icons.Filled.PlayCircle
+                )
+                GuideLink(
+                    text = stringResource(R.string.token_guide_link_quickstart),
+                    url = CF_DOC_QUICKSTART_URL,
+                    icon = Icons.Filled.Bolt
+                )
+                GuideLink(
+                    text = stringResource(R.string.token_guide_link_docs),
+                    url = CF_DOC_OVERVIEW_URL,
+                    icon = Icons.Filled.MenuBook
+                )
             }
         }
     }
@@ -213,6 +250,47 @@ private fun GuideStep(index: Int, text: String) {
             text,
             style = MaterialTheme.typography.bodyMedium,
             modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+/** Tappable illustrated-guide link row that opens the official Cloudflare page. */
+@Composable
+private fun GuideLink(text: String, url: String, icon: ImageVector) {
+    val context = LocalContext.current
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(10.dp))
+            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
+            .clickable {
+                runCatching {
+                    context.startActivity(
+                        Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    )
+                }
+            }
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Icon(
+            icon,
+            contentDescription = null,
+            modifier = Modifier.size(17.dp),
+            tint = StratosColors.Accent
+        )
+        Spacer(Modifier.width(9.dp))
+        Text(
+            text,
+            style = MaterialTheme.typography.bodySmall,
+            modifier = Modifier.weight(1f)
+        )
+        Icon(
+            Icons.Filled.OpenInBrowser,
+            contentDescription = null,
+            modifier = Modifier.size(14.dp),
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
     }
 }

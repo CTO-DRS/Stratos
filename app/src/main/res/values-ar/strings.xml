@@ -210,6 +210,10 @@
     <string name="token_guide_note">ما داخل التوكن: معرّف حسابك ومعرّف النفق وسرّ النفق. يُفكَّ كل شيء محلياً على هذا الجهاز — يقرأ ستراتوس معرّف النفق العام فقط، ولا يخزّن السرّ ولا يرسل شيئاً إلى أي جهة.</string>
     <string name="token_show_cd">إظهار التوكن</string>
     <string name="token_hide_cd">إخفاء التوكن</string>
+    <string name="token_guide_media_title">أدلة مصوّرة</string>
+    <string name="token_guide_link_video">الشرح الرسمي بالفيديو — إنشاء نفق من لوحة التحكم</string>
+    <string name="token_guide_link_quickstart">البداية السريعة — أنشئ نفقاً في 5 دقائق</string>
+    <string name="token_guide_link_docs">نظرة عامة على توثيق Cloudflare Tunnel</string>
     <string name="domain_s3_title">تم فك معرّف النفق</string>
     <string name="domain_s3_body">راجع القيم ثم أنشئ سجل DNS في الخطوة التالية.</string>
     <string name="domain_tunnel_id">معرّف النفق</string>

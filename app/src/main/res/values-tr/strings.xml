@@ -210,6 +210,10 @@
     <string name="token_guide_note">Token\'ın içinde: hesap kimliğiniz, tünel kimliği ve bir tünel gizli anahtarı. Her şey bu cihazda yerel olarak çözülür — Stratos yalnızca genel tünel kimliğini okur, gizli anahtarı asla saklamaz ve hiçbir yere hiçbir şey göndermez.</string>
     <string name="token_show_cd">Token\'ı göster</string>
     <string name="token_hide_cd">Token\'ı gizle</string>
+    <string name="token_guide_media_title">Görsel rehberler</string>
+    <string name="token_guide_link_video">Resmi video anlatımı — panodan tünel oluşturma</string>
+    <string name="token_guide_link_quickstart">Hızlı başlangıç — 5 dakikada tünel kurun</string>
+    <string name="token_guide_link_docs">Cloudflare Tunnel belgelerine genel bakış</string>
     <string name="domain_s3_title">Tünel kimliği çözüldü</string>
     <string name="domain_s3_body">Değerleri gözden geçirin, ardından sonraki adımda DNS kaydını oluşturun.</string>
     <string name="domain_tunnel_id">Tünel kimliği</string>

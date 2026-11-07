@@ -210,6 +210,10 @@
     <string name="token_guide_note">What’s inside the token: your account ID, the tunnel ID and a tunnel secret. Everything is decoded locally on this device — Stratos reads only the public tunnel ID, never stores the secret and never sends anything anywhere.</string>
     <string name="token_show_cd">Show token</string>
     <string name="token_hide_cd">Hide token</string>
+    <string name="token_guide_media_title">Illustrated guides</string>
+    <string name="token_guide_link_video">Official video walkthrough — create a tunnel from the dashboard</string>
+    <string name="token_guide_link_quickstart">Quick start — set up a tunnel in 5 minutes</string>
+    <string name="token_guide_link_docs">Cloudflare Tunnel documentation overview</string>
     <string name="domain_s3_title">Tunnel ID decoded</string>
     <string name="domain_s3_body">Review the values, then create the DNS record in the next step.</string>
     <string name="domain_tunnel_id">Tunnel ID</string>
