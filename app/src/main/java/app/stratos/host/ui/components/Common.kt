@@ -20,19 +20,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.composed
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import app.stratos.host.ui.theme.PlasmaDot
+import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.StratosDisplayFamily
 import app.stratos.host.ui.theme.glassEdgeBrush
 import app.stratos.host.ui.theme.glassFill
 import app.stratos.host.ui.theme.stratosGlowBrush
@@ -77,51 +81,85 @@ fun Pill(
     }
 }
 
-/** Glass stat tile with an animated value transition and energy tick. */
+/**
+ * Glass stat tile, instrument-panel style: Space Grotesk numerals with an
+ * animated value transition and an optional glowing icon chip.
+ */
 @Composable
 fun StatCard(
     label: String,
     value: String,
     modifier: Modifier = Modifier,
     valueColor: Color = MaterialTheme.colorScheme.onSurface,
-    mono: Boolean = true
+    icon: ImageVector? = null
 ) {
+    val dark = stratosIsDark()
     val shape = RoundedCornerShape(18.dp)
-    Column(
+    val chipShape = RoundedCornerShape(11.dp)
+    Row(
         modifier = modifier
             .fillMaxWidth()
-            .background(glassFill(stratosIsDark()), shape)
-            .border(1.dp, glassEdgeBrush(stratosIsDark()), shape)
-            .padding(horizontal = 14.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+            .background(glassFill(dark), shape)
+            .border(1.dp, glassEdgeBrush(dark), shape)
+            .padding(horizontal = 14.dp, vertical = 13.dp),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        Text(
-            label,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-        // Energy tick — a small signature gradient under the label.
-        Box(
-            Modifier
-                .width(26.dp)
-                .height(3.dp)
-                .background(stratosGlowBrush(), RoundedCornerShape(2.dp))
-        )
-        AnimatedContent(
-            targetState = value,
-            transitionSpec = {
-                (slideInVertically(tween(280)) { it / 3 } + fadeIn(tween(280))) togetherWith
-                    (slideOutVertically(tween(280)) { -it / 3 } + fadeOut(tween(180)))
-            },
-            label = "statValue"
-        ) { v ->
+        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
-                v,
-                style = MaterialTheme.typography.titleLarge,
-                color = valueColor,
-                fontFamily = if (mono) FontFamily.Monospace else null,
+                label,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1
             )
+            AnimatedContent(
+                targetState = value,
+                transitionSpec = {
+                    (slideInVertically(tween(280)) { it / 3 } + fadeIn(tween(280))) togetherWith
+                        (slideOutVertically(tween(280)) { -it / 3 } + fadeOut(tween(180)))
+                },
+                label = "statValue"
+            ) { v ->
+                Text(
+                    v,
+                    color = valueColor,
+                    fontFamily = StratosDisplayFamily,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 23.sp,
+                    letterSpacing = 0.sp,
+                    maxLines = 1
+                )
+            }
+        }
+        icon?.let { ic ->
+            Spacer(Modifier.width(10.dp))
+            Box(
+                Modifier
+                    .size(34.dp)
+                    .clip(chipShape)
+                    .background(
+                        if (dark) Color.White.copy(alpha = 0.06f)
+                        else StratosColors.AccentSoft.copy(alpha = 0.75f),
+                        chipShape
+                    )
+                    .border(
+                        1.dp,
+                        Brush.linearGradient(
+                            listOf(
+                                StratosColors.GlowA.copy(alpha = if (dark) 0.38f else 0.26f),
+                                StratosColors.GlowB.copy(alpha = 0.06f)
+                            )
+                        ),
+                        chipShape
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    ic,
+                    contentDescription = null,
+                    tint = if (dark) StratosColors.DarkAccent else StratosColors.Accent,
+                    modifier = Modifier.size(18.dp)
+                )
+            }
         }
     }
 }
@@ -162,16 +200,17 @@ fun SectionCard(
     }
 }
 
-/** Monospace URL row with the given content. */
+/** URL / identifier text in the Latin display family (input is always ASCII). */
 @Composable
 fun MonoText(text: String, modifier: Modifier = Modifier, color: Color = MaterialTheme.colorScheme.onSurface) {
     Text(
         text,
         modifier = modifier,
-        fontFamily = FontFamily.Monospace,
+        fontFamily = StratosDisplayFamily,
         fontSize = 13.sp,
         color = color,
-        fontWeight = FontWeight.Medium
+        fontWeight = FontWeight.Medium,
+        letterSpacing = 0.sp
     )
 }
 

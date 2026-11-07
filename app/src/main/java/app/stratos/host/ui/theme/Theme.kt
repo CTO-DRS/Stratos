@@ -140,7 +140,8 @@ private val StratosShapes = Shapes(
     extraLarge = RoundedCornerShape(28.dp)
 )
 
-// Typography (StratosFontFamily = bundled Cairo, Arabic-safe zero tracking)
+// Typography (StratosFontFamily = bundled Readex Pro, StratosDisplayFamily =
+// Space Grotesk for Latin-only display; Arabic-safe zero tracking)
 // lives in Type.kt — same package, wired into StratosTheme below.
 
 /** Tracks the active Stratos darkness for glass/aurora helpers. */

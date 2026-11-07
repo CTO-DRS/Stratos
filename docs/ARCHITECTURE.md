@@ -147,10 +147,12 @@ Generated HTML is written to `sites/<id>/index.html` and registered through
 mirrors automatically for RTL; monospace/numeric strings use
 `Formatters` (locale-stable) to avoid Arabic-Indic digit surprises in URLs.
 
-**Typography.** `ui/theme/Type.kt` bundles the Cairo font (SIL OFL 1.1;
-Arabic + Latin + Turkish coverage in one family, static 400/500/600/700
-instances generated from the upstream variable font) and maps it onto every
-Material 3 text style, so all three UI languages share one brand voice. The
+**Typography.** `ui/theme/Type.kt` bundles two families (both SIL OFL 1.1,
+static instances generated from the upstream variable fonts): **Readex Pro**
+(400/500/600/700) — an Arabic-first geometric sans with complete Arabic,
+Turkish and Latin coverage — mapped onto every Material 3 text style, so all
+three UI languages share one brand voice; and **Space Grotesk** (500/700),
+the Latin-only display voice for stat numerals, URLs and the wordmark. The
 shared scale is intentionally tracking-free: Arabic is a cursive script and
 any nonzero letter-spacing is inserted between shaped clusters, visibly
 breaking glyph joins. Wide tracking exists only on Latin-only brand strings

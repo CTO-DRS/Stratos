@@ -3,6 +3,12 @@ package app.stratos.host.ui.screens
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -21,11 +27,16 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Bolt
 import androidx.compose.material.icons.filled.ContentCopy
+import androidx.compose.material.icons.filled.DeviceHub
+import androidx.compose.material.icons.filled.FolderZip
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.QrCode2
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Share
+import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.TrendingUp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.AlertDialog
@@ -47,7 +58,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -73,7 +88,10 @@ import app.stratos.host.ui.components.StatusDot
 import app.stratos.host.ui.theme.GlowButton
 import app.stratos.host.ui.theme.LogoTile
 import app.stratos.host.ui.theme.StratosColors
+import app.stratos.host.ui.theme.StratosDisplayFamily
+import app.stratos.host.ui.theme.StratosWordmarkSpacing
 import app.stratos.host.ui.theme.stratosGlass
+import app.stratos.host.ui.theme.stratosIsDark
 import app.stratos.host.util.Formatters
 import app.stratos.host.util.QrCode
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -132,7 +150,13 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
             title = {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     LogoTile(sizeDp = 28)
-                    Text(stringResource(R.string.app_name), style = MaterialTheme.typography.titleLarge)
+                    Text(
+                        stringResource(R.string.app_name),
+                        style = MaterialTheme.typography.titleLarge,
+                        fontFamily = StratosDisplayFamily,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = StratosWordmarkSpacing
+                    )
                     if ((state as? HostState.Running)?.engineKind == EngineKind.KOTLIN) {
                         Pill("KOTLIN", StratosColors.WarningSoft, StratosColors.Warning)
                     } else if (state is HostState.Running) {
@@ -157,8 +181,12 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
         ) {
             Spacer(Modifier.height(2.dp))
 
-            // ---- Status hero card ----
-            SectionCard {
+            // ---- Status hero card (breathing ion glow while hosting) ----
+            Box {
+                if (state is HostState.Running) {
+                    HeroGlow(Modifier.matchParentSize())
+                }
+                SectionCard {
                 Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         val (dotColor, label) = when (state) {
@@ -253,6 +281,7 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                         )
                     }
                 }
+                }
             }
 
             // ---- Quick stats ----
@@ -260,25 +289,29 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
                 StatCard(
                     stringResource(R.string.stat_requests),
                     Formatters.count(status?.requests ?: 0),
-                    Modifier.weight(1f)
+                    Modifier.weight(1f),
+                    icon = Icons.Filled.Bolt
                 )
                 StatCard(
                     stringResource(R.string.stat_active),
                     Formatters.count(status?.active ?: 0),
                     Modifier.weight(1f),
-                    valueColor = StratosColors.Accent
+                    valueColor = StratosColors.Accent,
+                    icon = Icons.Filled.DeviceHub
                 )
             }
             Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 StatCard(
                     stringResource(R.string.stat_p50),
                     Formatters.ms(status?.p50Ms ?: 0.0),
-                    Modifier.weight(1f)
+                    Modifier.weight(1f),
+                    icon = Icons.Filled.Speed
                 )
                 StatCard(
                     stringResource(R.string.stat_p95),
                     Formatters.ms(status?.p95Ms ?: 0.0),
-                    Modifier.weight(1f)
+                    Modifier.weight(1f),
+                    icon = Icons.Filled.TrendingUp
                 )
             }
 
@@ -298,12 +331,36 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
             ) {
                 Column(Modifier.padding(horizontal = 16.dp, vertical = 4.dp)) {
                     if (defaultSite == null) {
-                        Text(
-                            stringResource(R.string.no_default_site),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodyMedium,
-                            modifier = Modifier.padding(bottom = 14.dp)
-                        )
+                        Column(
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(top = 10.dp, bottom = 16.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Box(
+                                Modifier
+                                    .size(46.dp)
+                                    .background(
+                                        StratosColors.AccentSoft.copy(alpha = 0.75f),
+                                        RoundedCornerShape(14.dp)
+                                    ),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Filled.FolderZip,
+                                    contentDescription = null,
+                                    tint = StratosColors.Accent,
+                                    modifier = Modifier.size(22.dp)
+                                )
+                            }
+                            Spacer(Modifier.height(10.dp))
+                            Text(
+                                stringResource(R.string.no_default_site),
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodyMedium,
+                                textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                            )
+                        }
                     } else {
                         Column(Modifier.padding(bottom = 14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(defaultSite!!.name, style = MaterialTheme.typography.titleMedium)
@@ -327,6 +384,37 @@ fun DashboardScreen(nav: NavHostController, vm: DashboardViewModel = viewModel()
     if (showQr && lanUrl != null) {
         QrDialog(url = lanUrl, onDismiss = { showQr = false })
     }
+}
+
+/**
+ * Soft ion glow breathing behind the hero card while the server runs —
+ * draw-phase animation only, no recomposition.
+ */
+@Composable
+private fun HeroGlow(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "heroGlow")
+    val breathe by transition.animateFloat(
+        initialValue = 0.35f,
+        targetValue = 0.85f,
+        animationSpec = infiniteRepeatable(tween(2400, easing = LinearEasing), RepeatMode.Reverse),
+        label = "heroGlowAlpha"
+    )
+    Box(
+        modifier
+            .drawBehind {
+                drawRect(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            StratosColors.GlowA.copy(alpha = 0.14f * breathe),
+                            StratosColors.GlowC.copy(alpha = 0.07f * breathe),
+                            Color.Transparent
+                        ),
+                        center = Offset(size.width * 0.82f, size.height * 0.12f),
+                        radius = size.maxDimension * 0.9f
+                    )
+                )
+            }
+    )
 }
 
 @Composable

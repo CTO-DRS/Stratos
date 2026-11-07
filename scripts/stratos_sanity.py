@@ -189,13 +189,15 @@ for f in list(ROOT.glob("app/src/main/**/*.kt")) + list(ROOT.glob("*.md")) + lis
 check(not ph, "no leftover placeholders", f"placeholders at: {ph}")
 
 # ------------------------------------------------------------------- fonts ----
-section("Bundled Arabic font (Cairo)")
+section("Bundled fonts (Readex Pro UI + Space Grotesk display)")
 font_dir = ROOT / "app/src/main/res/font"
 expected = {
-    "cairo_regular.ttf": 400,
-    "cairo_medium.ttf": 500,
-    "cairo_semibold.ttf": 600,
-    "cairo_bold.ttf": 700,
+    "readexpro_regular.ttf": 400,
+    "readexpro_medium.ttf": 500,
+    "readexpro_semibold.ttf": 600,
+    "readexpro_bold.ttf": 700,
+    "spacegrotesk_medium.ttf": 500,
+    "spacegrotesk_bold.ttf": 700,
 }
 for name, weight in expected.items():
     f = font_dir / name
@@ -205,22 +207,31 @@ for name, weight in expected.items():
           f"{name} missing/corrupt in res/font")
 names = {p.name for p in font_dir.glob("*")} if font_dir.exists() else set()
 check(names == set(expected),
-      "res/font contains only the four Cairo TTFs (AAPT-safe lowercase names)",
+      "res/font contains only the six Stratos TTFs (AAPT-safe lowercase names)",
       f"unexpected files in res/font: {sorted(names - set(expected))}")
 typekt = (ROOT / "app/src/main/java/app/stratos/host/ui/theme/Type.kt")
 tk = typekt.read_text(encoding="utf-8") if typekt.exists() else ""
 check(all(f"R.font.{n[:-4]}" in tk for n in expected),
-      "Type.kt wires all four font weights", "Type.kt missing R.font wiring")
+      "Type.kt wires all six font weights", "Type.kt missing R.font wiring")
+check("StratosDisplayFamily" in tk and "StratosFontFamily" in tk,
+      "Type.kt exposes both families (UI + Latin display)",
+      "Type.kt missing StratosFontFamily/StratosDisplayFamily")
 check("letterSpacing = 0.sp" in tk,
       "shared typography is tracking-free (Arabic joining safe)",
       "shared typography must keep letterSpacing = 0 (Arabic joining)")
-ofl = ROOT / "docs/licenses/Cairo-OFL.txt"
-check(ofl.exists() and "Open Font License" in ofl.read_text(encoding="utf-8", errors="ignore"),
-      "Cairo OFL license text present in docs/licenses",
-      "docs/licenses/Cairo-OFL.txt missing or not OFL")
+check("Cairo" not in tk.replace("replaces Cairo", ""),
+      "no Cairo font resources referenced by the type system",
+      "Type.kt still references Cairo")
+for lic in ("ReadexPro-OFL.txt", "Space-Grotesk-OFL.txt"):
+    p = ROOT / "docs/licenses" / lic
+    check(p.exists() and "Open Font License" in p.read_text(encoding="utf-8", errors="ignore"),
+          f"{lic} license text present in docs/licenses",
+          f"docs/licenses/{lic} missing or not OFL")
 notices = (ROOT / "THIRD_PARTY_NOTICES.md").read_text(encoding="utf-8")
-check("Cairo" in notices and "Open Font License" in notices,
-      "third-party notices cover the Cairo font", "THIRD_PARTY_NOTICES.md missing font section")
+check("Readex Pro" in notices and "Space Grotesk" in notices
+      and "Open Font License" in notices,
+      "third-party notices cover both bundled fonts",
+      "THIRD_PARTY_NOTICES.md missing font section")
 
 # ------------------------------------------------------------------ engine ----
 section("Go engine")

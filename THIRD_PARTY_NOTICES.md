@@ -3,15 +3,23 @@
 Stratos is MIT-licensed (see `LICENSE`). It bundles or depends on the
 following third-party work; each retains its own license.
 
-## Bundled font (app/src/main/res/font/)
+## Bundled fonts (app/src/main/res/font/)
 
-- **Cairo** — Arabic-first geometric sans-serif by Mohamed Gaber, extended by
-  the Google Fonts team; covers Arabic, Latin and Turkish in one family.
-  Static instances (400/500/600/700) generated from the upstream variable
-  font. Licensed under the SIL Open Font License 1.1 with the Reserved Font
-  Name "Cairo" — the full license text ships with the repository as
-  `docs/licenses/Cairo-OFL.txt` and is also available at
-  <https://github.com/google/fonts/blob/main/ofl/cairo/OFL.txt>.
+- **Readex Pro** — Arabic-first geometric sans (Lexend lineage) by Zeyad
+  Etman, Zainab Akhtar, Zohaib Akhtar and Zoya Raza (Lieto), extended by the
+  Readex Pro team; covers Arabic, Turkish and Latin in one family. Static
+  instances (400/500/600/700) generated from the upstream variable font.
+  Licensed under the SIL Open Font License 1.1 with the Reserved Font Name
+  "Readex Pro" — the full license text ships with the repository as
+  `docs/licenses/ReadexPro-OFL.txt` and is also available at
+  <https://github.com/google/fonts/blob/main/ofl/readexpro/OFL.txt>.
+- **Space Grotesk** — Latin display family (numerals, URLs, wordmark) by
+  Florian Karsten. Static instances (500/700) generated from the upstream
+  variable font. Licensed under the SIL Open Font License 1.1 with the
+  Reserved Font Name "Space Grotesk" — the full license text ships with the
+  repository as `docs/licenses/Space-Grotesk-OFL.txt` and is also available
+  at <https://github.com/google/fonts/blob/main/ofl/spacegrotesk/OFL.txt>.
+
   OFL fonts are not covered by the project's MIT license; they are bundled
   unmodified under their own terms.
 

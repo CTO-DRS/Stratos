@@ -429,7 +429,7 @@ private fun WelcomeScreen(onStart: () -> Unit) {
 
             // A hello in all three UI languages — the app's signature.
             // (Mixed-script string: no letter-spacing, it would break the
-            // Arabic joins; Cairo keeps the greeting in one brand voice.)
+            // Arabic joins; Readex Pro keeps the greeting in one brand voice.)
             StaggerIn(index = 1) {
                 Text(
                     stringResource(R.string.welcome_greeting),
