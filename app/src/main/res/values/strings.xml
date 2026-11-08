@@ -307,4 +307,19 @@
     <string name="perm_finish">Start using Stratos</string>
     <string name="perm_later">Later</string>
     <string name="settings_replay_intro">Replay introduction</string>
+<!-- Backup & migrate -->
+    <string name="ok">OK</string>
+    <string name="backup_title">Backup &amp; migrate</string>
+    <string name="backup_body">Copy every site and your server preferences into one backup file — and restore them on any device, exactly as they were. Secrets never travel: the AI key, the tunnel token and the access-protection password stay sealed in this phone\'s vault and are not part of backups.</string>
+    <string name="backup_export">Export backup</string>
+    <string name="backup_restore">Restore backup</string>
+    <string name="backup_working">Working…</string>
+    <string name="backup_done_title">Backup saved</string>
+    <string name="backup_done_body">%1$d sites (%2$d files) were written to the archive.</string>
+    <string name="backup_restore_confirm_title">Restore this backup?</string>
+    <string name="backup_restore_confirm_body">This archive holds %1$d sites (%2$d files). Sites are added alongside your current ones — nothing is overwritten — and your server preferences are restored too.</string>
+    <string name="backup_restore_done_title">Restore complete</string>
+    <string name="backup_restore_done_body">%1$d sites were restored and your preferences were applied.</string>
+    <string name="backup_error_title">Backup failed</string>
+    <string name="backup_not_backup_body">This file is not a Stratos backup archive.</string>
 </resources>

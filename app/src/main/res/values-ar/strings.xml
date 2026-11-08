@@ -307,4 +307,19 @@
     <string name="perm_finish">ابدأ استخدام ستراتوس</string>
     <string name="perm_later">لاحقًا</string>
     <string name="settings_replay_intro">إعادة عرض المقدمة</string>
+<!-- النسخ الاحتياطي والنقل -->
+    <string name="ok">حسناً</string>
+    <string name="backup_title">النسخ الاحتياطي والنقل</string>
+    <string name="backup_body">انسخ كل مواقعك وتفضيلات الخادم في ملف نسخة احتياطية واحد، واستعدها على أي جهاز كما هي تماماً. الأسرار لا تنتقل أبداً: مفتاح الذكاء الاصطناعي وتوكن النفق وكلمة حماية الوصول تبقى مغلّقة في خزنة هذا الهاتف وهي ليست جزءاً من النسخ الاحتياطية.</string>
+    <string name="backup_export">تصدير نسخة احتياطية</string>
+    <string name="backup_restore">استعادة نسخة احتياطية</string>
+    <string name="backup_working">جارٍ العمل…</string>
+    <string name="backup_done_title">تم حفظ النسخة الاحتياطية</string>
+    <string name="backup_done_body">كُتبت %1$d من المواقع (%2$d من الملفات) في الأرشيف.</string>
+    <string name="backup_restore_confirm_title">استعادة هذه النسخة؟</string>
+    <string name="backup_restore_confirm_body">يحتوي هذا الأرشيف على %1$d من المواقع (%2$d من الملفات). ستُضاف المواقع بجانب مواقعك الحالية — لا شيء يُستبدل — كما تُستعاد تفضيلات الخادم.</string>
+    <string name="backup_restore_done_title">اكتملت الاستعادة</string>
+    <string name="backup_restore_done_body">استُعيدت %1$d من المواقع وطُبّقت تفضيلاتك.</string>
+    <string name="backup_error_title">فشل النسخ الاحتياطي</string>
+    <string name="backup_not_backup_body">هذا الملف ليس نسخة احتياطية من ستراتوس.</string>
 </resources>

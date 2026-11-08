@@ -16,8 +16,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
@@ -46,11 +49,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import app.stratos.host.R
 import app.stratos.host.StratosApp
+import app.stratos.host.data.BackupManager
 import app.stratos.host.data.Settings
 import app.stratos.host.ui.components.Pill
 import app.stratos.host.ui.components.SectionCard
 import app.stratos.host.ui.theme.StratosColors
 import app.stratos.host.util.NetUtils
+import android.net.Uri
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -117,6 +122,79 @@ class SettingsViewModel : ViewModel() {
     fun reloadIfRunning() = viewModelScope.launch {
         graph.controller.reloadSites()
     }
+
+    // ---- Backup & migrate ----
+
+    /** What happened on the last backup operation (null = nothing to show). */
+    data class BackupOutcome(
+        val export: Boolean,
+        val sites: Int,
+        val files: Int,
+        val notBackup: Boolean = false,
+        val errorDetail: String? = null
+    )
+
+    private val _backupBusy = MutableStateFlow(false)
+    val backupBusy: StateFlow<Boolean> = _backupBusy.asStateFlow()
+
+    private val _restorePreview = MutableStateFlow<BackupManager.RestorePreview?>(null)
+    val restorePreview: StateFlow<BackupManager.RestorePreview?> = _restorePreview.asStateFlow()
+
+    private val _backupOutcome = MutableStateFlow<BackupOutcome?>(null)
+    val backupOutcome: StateFlow<BackupOutcome?> = _backupOutcome.asStateFlow()
+
+    fun exportBackup(uri: Uri) = viewModelScope.launch {
+        _backupBusy.value = true
+        _backupOutcome.value = try {
+            val r = graph.backup.exportTo(uri)
+            BackupOutcome(export = true, sites = r.sites, files = r.files)
+        } catch (t: Throwable) {
+            BackupOutcome(export = true, sites = 0, files = 0, errorDetail = t.message ?: t.javaClass.simpleName)
+        }
+        _backupBusy.value = false
+    }
+
+    fun stageRestore(uri: Uri) = viewModelScope.launch {
+        _backupBusy.value = true
+        try {
+            _restorePreview.value = graph.backup.stageRestore(uri)
+        } catch (t: Throwable) {
+            _backupOutcome.value = BackupOutcome(
+                export = false, sites = 0, files = 0,
+                notBackup = t is app.stratos.host.data.NotABackupException,
+                errorDetail = t.message ?: t.javaClass.simpleName
+            )
+        }
+        _backupBusy.value = false
+    }
+
+    /** User confirmed the preview — materialise the restored sites + settings. */
+    fun confirmRestore() {
+        val preview = _restorePreview.value ?: return
+        viewModelScope.launch {
+            _restorePreview.value = null
+            _backupBusy.value = true
+            _backupOutcome.value = try {
+                val r = graph.backup.commitRestore(preview)
+                graph.controller.reloadSites()
+                _settings.value = graph.settings.settings.first()
+                BackupOutcome(export = false, sites = r.sites, files = 0)
+            } catch (t: Throwable) {
+                BackupOutcome(export = false, sites = 0, files = 0, errorDetail = t.message ?: t.javaClass.simpleName)
+            }
+            _backupBusy.value = false
+        }
+    }
+
+    fun cancelRestore() {
+        val preview = _restorePreview.value
+        _restorePreview.value = null
+        preview?.let { viewModelScope.launch { graph.backup.cleanup(it) } }
+    }
+
+    fun dismissOutcome() {
+        _backupOutcome.value = null
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -131,6 +209,23 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
     var keyDialog by remember { mutableStateOf(false) }
     var passDialog by remember { mutableStateOf(false) }
     val authSaved by vm.authSaved.collectAsState()
+
+    val backupBusy by vm.backupBusy.collectAsState()
+    val restorePreview by vm.restorePreview.collectAsState()
+    val backupOutcome by vm.backupOutcome.collectAsState()
+
+    // Backup export: the user picks the destination once, the archive is
+    // streamed straight into it (same pattern as site export).
+    val exportBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.CreateDocument("application/zip")
+    ) { uri: Uri? ->
+        if (uri != null) vm.exportBackup(uri)
+    }
+    val pickBackup = rememberLauncherForActivityResult(
+        ActivityResultContracts.OpenDocument()
+    ) { uri: Uri? ->
+        if (uri != null) vm.stageRestore(uri)
+    }
 
     Column(Modifier.fillMaxSize()) {
         TopAppBar(
@@ -340,6 +435,29 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
                 }
             }
 
+            // ---- Backup & migrate ----
+            SectionCard(
+                header = { Text(stringResource(R.string.backup_title), style = MaterialTheme.typography.titleMedium) }
+            ) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(
+                        stringResource(R.string.backup_body),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        Button(
+                            onClick = { exportBackup.launch(BackupManager.suggestedFileName()) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text(stringResource(R.string.backup_export)) }
+                        OutlinedButton(
+                            onClick = { pickBackup.launch(BackupManager.BACKUP_MIME) },
+                            modifier = Modifier.weight(1f)
+                        ) { Text(stringResource(R.string.backup_restore)) }
+                    }
+                }
+            }
+
             // ---- Diagnostics ----
             SectionCard(
                 header = { Text(stringResource(R.string.settings_diagnostics), style = MaterialTheme.typography.titleMedium) }
@@ -363,6 +481,84 @@ fun SettingsScreen(nav: NavHostController, vm: SettingsViewModel = viewModel()) 
             }
             Spacer(Modifier.height(10.dp))
         }
+    }
+
+    if (backupBusy) {
+        AlertDialog(
+            onDismissRequest = {},
+            title = { Text(stringResource(R.string.backup_working)) },
+            text = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    CircularProgressIndicator(modifier = Modifier.size(22.dp), strokeWidth = 2.5.dp)
+                    Text(stringResource(R.string.backup_working))
+                }
+            },
+            confirmButton = {}
+        )
+    }
+
+    restorePreview?.let { preview ->
+        AlertDialog(
+            onDismissRequest = { vm.cancelRestore() },
+            title = { Text(stringResource(R.string.backup_restore_confirm_title)) },
+            text = {
+                Text(
+                    stringResource(
+                        R.string.backup_restore_confirm_body,
+                        preview.sites.size,
+                        preview.filesTotal
+                    ),
+                    style = MaterialTheme.typography.bodySmall
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { vm.confirmRestore() }) {
+                    Text(stringResource(R.string.backup_restore))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { vm.cancelRestore() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
+        )
+    }
+
+    backupOutcome?.let { outcome ->
+        val failed = outcome.notBackup || outcome.errorDetail != null
+        AlertDialog(
+            onDismissRequest = { vm.dismissOutcome() },
+            title = {
+                Text(
+                    stringResource(
+                        when {
+                            failed -> R.string.backup_error_title
+                            outcome.export -> R.string.backup_done_title
+                            else -> R.string.backup_restore_done_title
+                        }
+                    )
+                )
+            },
+            text = {
+                Text(
+                    when {
+                        outcome.notBackup -> stringResource(R.string.backup_not_backup_body)
+                        outcome.errorDetail != null -> outcome.errorDetail ?: ""
+                        outcome.export -> stringResource(R.string.backup_done_body, outcome.sites, outcome.files)
+                        else -> stringResource(R.string.backup_restore_done_body, outcome.sites)
+                    },
+                    style = MaterialTheme.typography.bodySmall
+                )
+            },
+            confirmButton = {
+                TextButton(onClick = { vm.dismissOutcome() }) {
+                    Text(stringResource(R.string.ok))
+                }
+            }
+        )
     }
 
     if (passDialog) {

@@ -3,6 +3,7 @@ package app.stratos.host.di
 import android.content.Context
 import androidx.room.Room
 import app.stratos.host.data.AppDb
+import app.stratos.host.data.BackupManager
 import app.stratos.host.data.SettingsStore
 import app.stratos.host.data.SitesRepository
 import app.stratos.host.engine.EngineApi
@@ -36,4 +37,6 @@ class AppGraph(private val context: Context) {
     val controller by lazy { HostingController(engine, repository, settings, vault) }
 
     val tunnel by lazy { TunnelManager(context, vault, settings) }
+
+    val backup by lazy { BackupManager(context, siteDao, repository, settings, engine) }
 }

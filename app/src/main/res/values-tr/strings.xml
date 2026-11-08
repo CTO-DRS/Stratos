@@ -307,4 +307,19 @@
     <string name="perm_finish">Stratos\'u kullanmaya başla</string>
     <string name="perm_later">Daha sonra</string>
     <string name="settings_replay_intro">Tanıtımı yeniden oynat</string>
+<!-- Yedekleme ve taşıma -->
+    <string name="ok">Tamam</string>
+    <string name="backup_title">Yedekleme ve taşıma</string>
+    <string name="backup_body">Tüm sitelerinizi ve sunucu tercihlerinizi tek bir yedek dosyasına kopyalayın — ve herhangi bir cihazda aynen geri yükleyin. Sırlar asla yolculuk yapmaz: AI anahtarı, tünel token\'ı ve erişim koruma şifresi bu telefonun kasasında mühürlü kalır ve yedeklerin parçası değildir.</string>
+    <string name="backup_export">Yedeği dışa aktar</string>
+    <string name="backup_restore">Yedeği geri yükle</string>
+    <string name="backup_working">Çalışıyor…</string>
+    <string name="backup_done_title">Yedek kaydedildi</string>
+    <string name="backup_done_body">%1$d site (%2$d dosya) arşive yazıldı.</string>
+    <string name="backup_restore_confirm_title">Bu yedek geri yüklensin mi?</string>
+    <string name="backup_restore_confirm_body">Bu arşiv %1$d site (%2$d dosya) içeriyor. Siteler, mevcut olanlarınızın yanına eklenir — hiçbir şeyin üzerine yazılmaz — ve sunucu tercihleriniz de geri yüklenir.</string>
+    <string name="backup_restore_done_title">Geri yükleme tamam</string>
+    <string name="backup_restore_done_body">%1$d site geri yüklendi ve tercihleriniz uygulandı.</string>
+    <string name="backup_error_title">Yedekleme başarısız</string>
+    <string name="backup_not_backup_body">Bu dosya bir Stratos yedek arşivi değil.</string>
 </resources>

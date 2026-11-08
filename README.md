@@ -43,6 +43,7 @@
 | 🔒 **استيراد ZIP آمن** | فحص ZIP-Slip والروابط الرمزية وقنابل الضغط والتشفير والأسماء المكررة وCRC32 لكل مدخل — قبل أن يلمس التخزين، والاستخراج ذرّي |
 | 📥 **هدف مشاركة** | شارك أي ZIP من أي تطبيق (أو اضغطه في مدير الملفات) ← «مشاركة ← Stratos» فيُفتح معالج الاستيراد نفسه مباشرة |
 | 📤 **تصدير المواقع** | أخرِج أي موقع كحزمة ZIP جاهزة لإعادة الاستيراد أو المشاركة — بياناتك تخرج بسهولة كما دخلت |
+| 💾 **نسخ احتياطي ونقل** | كل المواقع + تفضيلات الخادم في أرشيف واحد: صدّره عبر منتقي النظام واستعده على أي جهاز — المواقع المستعادة تُضاف ولا تُستبدل، والأسرار (مفتاح AI، توكن النفق، كلمة الحماية) لا تترك الهاتف إطلاقاً |
 | 🌐 **مواقع متعددة** | موقع افتراضي على `/` ومواقع ثانوية على `/s/<id>/` مع SPA fallback وETag/304 وgzip وRange و**فهرس مجلدات تلقائي** عندما لا يوجد index.html و**صفحة 404 مخصّصة** لكل موقع (404.html في الجذر) |
 | 📊 **مقاييس صادقة** | طلبات، اتصالات نشطة، p50/p95/max، رموز الحالة، ذاكرة، تخزين، حرارة البطارية، شبكة — وإن منع النظام قياساً تُظهر «غير متاح» ولا تختلق أرقاماً |
 | 🤖 **بنّاء مواقع AI** | الميزة الأقوى: صِف مشروعك فيولّد ستراتوس موقعاً كاملاً — **يعمل دون اتصال** بمولّد قوالب ذكي، أو عبر أي API متوافق مع OpenAI (Z.ai GLM / OpenAI / OpenRouter) بمفتاحك المشفّر |
@@ -155,6 +156,7 @@ Stratos answers: *"I built a site with an AI tool — how do I get it online fro
 - **Secure ZIP import** — zip-slip, symlinks, bombs, encrypted/duplicate entries and per-entry CRC32 are rejected *before* storage; extraction is atomic.
 - **Share-target import** — share any ZIP from any app (or tap it in a file manager) → *Share → Stratos* opens the same guarded import flow; streams are staged into the app cache before parsing.
 - **Site export** — any site leaves the same door it entered: the site menu packs its files back into a ZIP you save through the system picker — re-import it anywhere or share it as usual.
+- **Full backup & migrate** — every site + the server preferences in one archive: export through the system picker, restore on any device. Restored sites are added, never overwritten (colliding ids get fresh ones), and secrets (AI key, tunnel token, protection password) never leave the phone — they are not part of the format.
 - **Multi-site** — default site at `/`, secondary sites at `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range, a **branded auto-index** whenever a directory has no index.html, and a **per-site custom 404 page** (drop a `404.html` in the site root).
 - **Honest metrics** — requests, active connections, p50/p95/max, status codes, memory, storage, battery temperature, network counters. What the platform hides is shown as *Unavailable*, never invented.
 - **AI site builder (the killer feature)** — describe your project and Stratos generates a complete single-file site: fully **offline** via a smart template engine, or through any OpenAI-compatible API (Z.ai GLM / OpenAI / OpenRouter) with your key, AES-256-GCM encrypted on device.
@@ -206,6 +208,7 @@ Stratos şunu çözer: *"AI aracıyla bir site kurdum — telefonumdan nasıl ya
 - **Güvenli ZIP içe aktarma** — zip-slip, symlink, zip bombası, şifreli/tekrarlı girdiler ve CRC32, depolamaya dokunmadan reddedilir; çıkarma atomiktir.
 - **Paylaşım hedefi** — herhangi bir uygulamadan ZIP paylaşın (veya dosya yöneticisinde dokunun) → *Paylaş → Stratos* aynı korumalı içe aktarma akışını açar.
 - **Site dışa aktarma** — herhangi bir site girdiği kapıdan çıkar: site menüsü dosyaları sistem seçicisiyle kaydedebileceğiniz bir ZIP'e paketler.
+- **Tam yedekleme ve taşıma** — her site + sunucu tercihleri tek arşivde: sistem seçicisiyle dışa aktarın, herhangi bir cihazda geri yükleyin. Geri yüklenen siteler eklenir, üzerine yazılmaz (çakışan kimlikler yenilenir) ve sırlar (AI anahtarı, tünel token'ı, koruma şifresi) telefonu terk etmez — biçimin parçası değildir.
 - **Çoklu site** — varsayılan `/`, ikincil `/s/<id>/`, SPA fallback, ETag/304, gzip, byte-range; index.html olmayan dizinlerde **markalı otomatik dizin listesi** ve site köküne konan `404.html` ile **siteye özel 404 sayfası**.
 - **Dürüst metrikler** — istekler, aktif bağlantılar, p50/p95/max, durum kodları, bellek, depolama, pil sıcaklığı. Platform gizlerse *Kullanılamıyor* yazar — asla uydurmaz.
 - **AI site yapıcı** — projenizi anlatın; Stratos tam bir tek-dosya site üretir: **çevrimdışı** şablon motoruyla veya OpenAI-uyumlu API (Z.ai GLM / OpenAI / OpenRouter) ile; anahtarınız cihazda AES-256-GCM şifreli.
